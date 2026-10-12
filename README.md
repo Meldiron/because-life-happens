@@ -10,6 +10,7 @@ Live: https://investment-playground-v2.appwrite.network · Full version: [v1](ht
 - **Retirement** – pick how much you take out each month (at today's prices, rising with inflation) and see the age you go broke, compared with the promise. Life events can land here too.
 - **Live a random life** deals four setbacks and two lucky breaks.
 - Balances can go negative: debt grows at 8% a year.
+- **Export PDF** – a two-page report with your settings, both charts and every life event. The scenario is stored inside the PDF (as a document property and an attached `scenario.json`), so **Import PDF** – or dropping the file on the page – restores it exactly.
 
 ## Run locally
 
