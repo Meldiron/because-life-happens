@@ -172,11 +172,20 @@ h1 .pink { color: var(--pink); }
 .tip .p { color: var(--muted); }
 .tip .r { color: var(--pink); }
 
-.pop-card { position: absolute; z-index: 12; width: 270px; background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); display: grid; gap: 8px; font-size: 13.5px; }
+.pop-card { position: absolute; z-index: 12; width: 300px; background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); display: grid; gap: 8px; font-size: 13.5px; }
 .pop-card .t { font-family: var(--font-display); font-size: 16px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
 .pop-card p { margin: 0; color: var(--fg-2); }
 .pop-card .actions { display: flex; gap: 8px; }
 .pop-card .btn { height: 32px; font-size: 13px; }
+.price { display: grid; gap: 5px; padding-top: 2px; }
+.price label { color: var(--muted); font-size: 12.5px; }
+.stepper { display: flex; align-items: center; height: 36px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); overflow: hidden; }
+.stepper:focus-within { border-color: var(--pink); }
+.stepper button { width: 36px; height: 100%; border: 0; background: transparent; color: var(--muted); font-size: 18px; line-height: 1; flex: none; }
+.stepper button:hover { background: var(--raised); color: var(--fg); }
+.stepper .affix { color: var(--muted); font-size: 14px; flex: none; }
+.stepper input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: var(--fg); font: 600 15px var(--font-body); font-variant-numeric: tabular-nums; text-align: center; outline: none; -moz-appearance: textfield; }
+.stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 .decks { display: grid; gap: 16px; }
 .deck-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -286,7 +295,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       <div class="panel-head">
         <div>
           <h2>Your timeline</h2>
-          <p class="hint">Drop cards on it. Drag icons to move them in time, pull a pause bar's handle to make it longer. Click an icon to remove it.</p>
+          <p class="hint">Drop cards on it. Drag icons to move them in time, pull a pause bar's handle to make it longer. Click an icon to change its price or remove it.</p>
         </div>
         <div class="tools">
           <button class="switch" id="real" type="button" role="switch" aria-checked="false"><span class="track" aria-hidden="true"></span>Today's money</button>
@@ -361,6 +370,15 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   const tok = (key, age) => (CARDS[key].type === 'pause' ? { id: nextId++, key, age, months: CARDS[key].months } : { id: nextId++, key, age });
   const isRange = (t) => CARDS[t.key].type === 'pause';
   const monthsOf = (t) => t.months || CARDS[t.key].months;
+  const priceOf = (t) => t.price ?? Math.abs(CARDS[t.key].amount || 0);
+  const amountOf = (t) => (CARDS[t.key].deck === 'take' ? -1 : 1) * priceOf(t);
+  const dropOf = (t) => t.drop ?? CARDS[t.key].drop;
+  const EDIT = {
+    lump: { get: priceOf, set: (t, v) => { t.price = v; }, label: (c) => (c.deck === 'take' ? "Price in today's money" : "Amount in today's money"), pre: '€', min: 0, max: 5000000, step: (v) => (v < 5000 ? 500 : v < 50000 ? 1000 : 5000) },
+    monthly: { get: priceOf, set: (t, v) => { t.price = v; }, label: () => 'Extra invested every month', pre: '€', min: 0, max: 100000, step: () => 10 },
+    pause: { get: monthsOf, set: (t, v) => { t.months = v; }, label: () => 'Months without investing', post: 'months', min: 1, max: (t) => Math.round((RETIRE - t.age) * 12), step: () => 1 },
+    crash: { get: (t) => Math.round(dropOf(t) * 100), set: (t, v) => { t.drop = v / 100; }, label: () => 'How far the market falls', post: '%', min: 1, max: 90, step: () => 5 },
+  };
   const snapM = (a) => Math.round(a * 12) / 12;
   function fmtAge(a) {
     const y = Math.floor(a + 1e-9), m = Math.round((a - y) * 12);
@@ -410,11 +428,11 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
         if (t.id === skipId) continue;
         const c = CARDS[t.key], m0 = Math.round((t.age - S.age) * 12);
         if (m0 < 0 || m0 >= M) continue;
-        if (c.type === 'lump') lump[m0] += c.amount * Math.pow(1 + INFL, m0 / 12);
-        else if (c.type === 'monthly') for (let m = m0; m < M; m++) extra[m] += c.amount;
+        if (c.type === 'lump') lump[m0] += amountOf(t) * Math.pow(1 + INFL, m0 / 12);
+        else if (c.type === 'monthly') for (let m = m0; m < M; m++) extra[m] += priceOf(t);
         else if (c.type === 'pause') for (let m = m0; m < Math.min(M, m0 + monthsOf(t)); m++) paused[m] = 1;
         else {
-          const d = Math.log(1 - c.drop), n = c.recover * 12;
+          const d = Math.log(1 - dropOf(t)), n = c.recover * 12;
           crash[m0] += d;
           for (let k = 1; k <= n && m0 + k < M; k++) crash[m0 + k] -= d / n;
         }
@@ -785,31 +803,70 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
 
   // ---------- popover ----------
   const pop = document.getElementById('pop');
+  let popStory = null;
   function openPop(id) {
     const it = model.per.find((p) => p.t.id === id);
     if (!it) return;
     selectedId = id;
     hideTip();
-    const title = document.createElement('div'); title.className = 't'; title.textContent = `${it.c.emoji} ${it.c.name} at ${fmtAge(it.t.age)}`;
-    const p = document.createElement('p'); p.textContent = story(it);
+    const t = it.t, ed = EDIT[it.c.type];
+    const title = document.createElement('div'); title.className = 't'; title.textContent = `${it.c.emoji} ${it.c.name} at ${fmtAge(t.age)}`;
+    popStory = document.createElement('p'); popStory.textContent = story(it);
+
+    const field = document.createElement('div'); field.className = 'price';
+    const label = document.createElement('label'); label.htmlFor = 'pop-value'; label.textContent = ed.label(it.c);
+    const stepper = document.createElement('div'); stepper.className = 'stepper';
+    const input = document.createElement('input');
+    Object.assign(input, { id: 'pop-value', type: 'number', inputMode: 'numeric', min: ed.min, value: ed.get(t) });
+    const maxOf = () => (typeof ed.max === 'function' ? ed.max(t) : ed.max);
+    const apply = (v, animate) => {
+      const val = Math.max(ed.min, Math.min(maxOf(), Math.round(v)));
+      ed.set(t, val);
+      save(); render(!animate);
+      return val;
+    };
+    input.addEventListener('input', () => { const v = parseFloat(input.value); if (Number.isFinite(v)) apply(v, false); });
+    input.addEventListener('change', () => { input.value = ed.get(t); toastFor(t.id); });
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { input.blur(); closePop(); } });
+    const nudge = (dir) => {
+      const cur = ed.get(t);
+      input.value = apply(cur + dir * ed.step(dir > 0 ? cur : cur - 1), true);
+    };
+    const minus = document.createElement('button'); minus.type = 'button'; minus.textContent = '−'; minus.setAttribute('aria-label', 'Less');
+    const plus = document.createElement('button'); plus.type = 'button'; plus.textContent = '+'; plus.setAttribute('aria-label', 'More');
+    minus.addEventListener('click', () => nudge(-1));
+    plus.addEventListener('click', () => nudge(1));
+    const affix = (text) => { const a = document.createElement('span'); a.className = 'affix'; a.textContent = text; return a; };
+    stepper.append(minus);
+    if (ed.pre) stepper.append(affix(ed.pre));
+    stepper.append(input);
+    if (ed.post) stepper.append(affix(ed.post));
+    stepper.append(plus);
+    field.append(label, stepper);
+
     const actions = document.createElement('div'); actions.className = 'actions';
     const rm = document.createElement('button'); rm.className = 'btn btn-primary'; rm.type = 'button'; rm.textContent = 'Remove';
     rm.addEventListener('click', () => removeToken(id));
     const keep = document.createElement('button'); keep.className = 'btn'; keep.type = 'button'; keep.textContent = 'Keep';
     keep.addEventListener('click', closePop);
     actions.append(rm, keep);
-    pop.replaceChildren(title, p, actions);
+    pop.replaceChildren(title, popStory, field, actions);
     pop.hidden = false;
-    const W = chartEl.clientWidth, x = X(it.t.age);
+    const W = chartEl.clientWidth, x = X(t.age);
     const lane = layoutTokens().find((v) => v.t.id === id)?.lane || 0;
-    pop.style.left = Math.max(8, Math.min(W - 270 + 10, x - 30)) + 'px';
+    pop.style.left = Math.max(8, Math.min(W - 300 + 10, x - 30)) + 'px';
     pop.style.top = (chartEl.offsetTop + LANES[lane] + 30) + 'px';
     drawTokens(true);
-    rm.focus();
+    if (matchMedia('(pointer: fine)').matches) { input.focus(); input.select(); } else keep.focus();
+  }
+  function refreshPop() {
+    if (selectedId === null || !popStory) return;
+    const it = model.per.find((p) => p.t.id === selectedId);
+    if (it) popStory.textContent = story(it);
   }
   function closePop() {
     if (selectedId === null) return;
-    selectedId = null; pop.hidden = true;
+    selectedId = null; pop.hidden = true; popStory = null;
     if (X) drawTokens(true);
   }
   document.addEventListener('pointerdown', (e) => {
@@ -885,18 +942,18 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   function story(it) {
     const { c, t, impact, skipped } = it;
     const m0 = Math.round((t.age - S.age) * 12), M = model.M;
-    const then = deflate(Math.abs(c.amount || 0) * Math.pow(1 + INFL, m0 / 12), m0);
+    const then = deflate(priceOf(t) * Math.pow(1 + INFL, m0 / 12), m0);
     const imp = money(Math.abs(impact));
     let s;
-    if (c.type === 'lump' && c.amount < 0) s = `It cost ${money(then)} at ${t.age}. Left invested, that money would have been ${imp} by 65.`;
+    if (c.type === 'lump' && c.deck === 'take') s = `It cost ${money(then)} at ${t.age}. Left invested, that money would have been ${imp} by 65.`;
     else if (c.type === 'lump') s = `${money(then)} landed at ${t.age}. Invested, it grows into ${imp} by 65.`;
     else if (c.type === 'pause') s = `${fmtLen(monthsOf(t))} without investing, from ${fmtAge(t.age)} to ${fmtAge(Math.min(RETIRE, t.age + monthsOf(t) / 12))} (${money(deflate(skipped, m0))} skipped). That gap costs ${imp} at 65.`;
-    else if (c.type === 'monthly') s = `${money(c.amount)} more every month from ${t.age} adds up to ${imp} by 65.`;
+    else if (c.type === 'monthly') s = `${money(priceOf(t))} more every month from ${t.age} adds up to ${imp} by 65.`;
     else s = impact >= 0
-      ? `Markets fell 30% at ${t.age} and recovered in 3 years. You kept buying cheap, so it actually helped: +${imp}.`
-      : `Markets fell 30% at ${t.age}${RETIRE - t.age < 3 ? ' with no time left to recover' : ''}. By 65 it cost you ${imp}.`;
+      ? `Markets fell ${Math.round(dropOf(t) * 100)}% at ${t.age} and recovered in 3 years. You kept buying cheap, so it actually helped: +${imp}.`
+      : `Markets fell ${Math.round(dropOf(t) * 100)}% at ${t.age}${RETIRE - t.age < 3 ? ' with no time left to recover' : ''}. By 65 it cost you ${imp}.`;
     const after = model.reality.bal[Math.min(M, m0 + 1)];
-    if (c.type === 'lump' && c.amount < 0 && after < 0) s += ` Your investments couldn't cover it, so you went ${money(deflate(-after, m0 + 1))} into debt at ${DEBT * 100}% interest.`;
+    if (c.type === 'lump' && c.deck === 'take' && after < 0) s += ` Your investments couldn't cover it, so you went ${money(deflate(-after, m0 + 1))} into debt at ${DEBT * 100}% interest.`;
     return s;
   }
 
@@ -950,6 +1007,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     renderScore(instant);
     drawChart(instant);
     renderLog();
+    refreshPop();
   }
   function afterChange(animate) { syncSetup(); closePop(); save(); render(!animate); }
 
