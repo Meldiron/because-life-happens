@@ -89,6 +89,8 @@ h1 .pink { color: var(--pink); }
 .pills button:hover { color: var(--fg); }
 .pills button[aria-pressed="true"] { background: var(--pink); color: #fff; }
 .pills button.custom:not([aria-pressed="true"]) { color: var(--faint); }
+.pills button:disabled { opacity: 0.35; cursor: not-allowed; }
+.pills button:disabled:hover { color: var(--muted); }
 .custom-edit { display: inline-flex; align-items: center; justify-content: center; gap: 2px; padding: 0 8px; border-radius: 7px; background: var(--raised); box-shadow: inset 0 0 0 1.5px var(--pink); font: 600 14px var(--font-body); color: var(--muted); }
 .custom-edit input { width: 6ch; min-width: 0; border: 0; background: transparent; color: var(--fg); font: inherit; padding: 5px 2px; text-align: right; outline: none; -moz-appearance: textfield; }
 .custom-edit input::-webkit-outer-spin-button, .custom-edit input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -361,7 +363,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   .setup .word { font-size: 15px; margin-top: 4px; }
   .setup .pills { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); }
   .setup .pills button { padding: 7px 4px; font-size: 13px; }
-  #pick-age, #pick-start, #pick-payout { --cols: 4; }
+  #pick-age, #pick-retire, #pick-start, #pick-payout { --cols: 4; }
   #pick-monthly, #pick-raise, #pick-rate { --cols: 3; }
   #pick-view { --cols: 2; }
   .setup .custom-edit { font-size: 13px; padding: 0 6px; }
@@ -385,8 +387,8 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
 <main class="wrap">
   <section class="hero">
     <p class="eyebrow"><span class="dot"></span>Investing reality check</p>
-    <h1>The brochure promises a fortune at 65.<br><span class="pink">Life has other plans.</span></h1>
-    <p class="lede">Every investing talk shows the same smooth line. Real life comes with weddings, broken cars and the odd inheritance. <strong>Drag life onto your timeline</strong> and see what's actually waiting for you at 65.</p>
+    <h1>The brochure promises a fortune at <span data-retire>65</span>.<br><span class="pink">Life has other plans.</span></h1>
+    <p class="lede">Every investing talk shows the same smooth line. Real life comes with weddings, broken cars and the odd inheritance. <strong>Drag life onto your timeline</strong> and see what's actually waiting for you at <span data-retire>65</span>.</p>
     <div class="setup" role="group" aria-label="Your plan">
       <span class="word">I'm</span>
       <span class="pills" id="pick-age" role="group" aria-label="Your age"></span>
@@ -398,7 +400,9 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       <span class="pills" id="pick-rate" role="group" aria-label="Where you invest"></span>
       <span class="word">raising it</span>
       <span class="pills" id="pick-raise" role="group" aria-label="Yearly raise of the monthly amount"></span>
-      <span class="word">each year, showing</span>
+      <span class="word">each year until I retire at</span>
+      <span class="pills" id="pick-retire" role="group" aria-label="Retirement age"></span>
+      <span class="word">showing</span>
       <span class="pills" id="pick-view" role="group" aria-label="Show money as"></span>
       <span class="word">in</span>
       <select class="pick-select" id="pick-currency" aria-label="Currency" title="Amounts switch to rough local prices, not exact exchange rates"></select>
@@ -407,12 +411,12 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
 
   <section class="score" aria-live="polite">
     <div class="tile">
-      <div class="label"><span class="key" aria-hidden="true"></span>The promise at 65</div>
+      <div class="label"><span class="key" aria-hidden="true"></span><span>The promise at <span data-retire>65</span></span></div>
       <div class="value" id="v-promise">€0</div>
       <div class="sub" id="s-promise"></div>
     </div>
     <div class="tile reality">
-      <div class="label"><span class="key solid" aria-hidden="true"></span>Your reality at 65</div>
+      <div class="label"><span class="key solid" aria-hidden="true"></span><span>Your reality at <span data-retire>65</span></span></div>
       <div class="value" id="v-reality">€0</div>
       <div class="sub" id="s-reality"></div>
     </div>
@@ -428,7 +432,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       <div class="panel" id="board-panel">
         <div class="panel-head">
           <div>
-            <h2>Saving until 65</h2>
+            <h2>Saving until <span data-retire>65</span></h2>
             <p class="hint">Drag cards onto it. Drag icons to move them in time and pull a pause bar's handle to make it longer. Click an icon to change it or remove it.</p>
           </div>
         </div>
@@ -443,7 +447,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
         <div class="panel-head">
           <div>
             <h2>Retirement</h2>
-            <p class="hint">At 65 you stop investing and live off your pot. Prices keep rising, so what you take out grows every year. Life happens here too: drag cards onto this chart.</p>
+            <p class="hint">At <span data-retire>65</span> you stop investing and live off your pot. Prices keep rising, so what you take out grows every year. Life happens here too: drag cards onto this chart.</p>
           </div>
         </div>
         <div class="setup compact" role="group" aria-label="Retirement plan">
@@ -509,8 +513,9 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
 <script src="https://cdn.jsdelivr.net/npm/lucide@1.45.0/dist/umd/lucide.min.js"></script>
 <script>
 (() => {
-  const RETIRE = 65, END = 100, INFL = 0.025, DEBT = 0.08, STORE = 'because-life-happens-v1';
+  const END = 100, INFL = 0.025, DEBT = 0.08, STORE = 'because-life-happens-v1';
   const AGES = [20, 25, 30, 35, 40, 45];
+  const RETIRES = [55, 60, 62, 65, 67, 70];
   const STARTS = [0, 5000, 10000, 25000, 50000, 100000];
   const MONTHLY = [100, 200, 300, 500, 1000];
   const RATES = [[0.01, 'a bank', '1%'], [0.03, 'bonds', '3%'], [0.05, 'a mix', '5%'], [0.07, 'stocks', '7%']];
@@ -531,7 +536,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     CZK: { post: ' Kč', perEur: 20 },
   };
   const currencyName = (code) => new Intl.DisplayNames(['en'], { type: 'currency' }).of(code);
-  const DEFAULTS = () => ({ currency: 'EUR', age: 30, start: 0, monthly: 300, rate: 0.07, raise: 0.02, payout: 1000, real: true, tokens: EXAMPLE() });
+  const DEFAULTS = () => ({ currency: 'EUR', age: 30, retire: 65, start: 0, monthly: 300, rate: 0.07, raise: 0.02, payout: 1000, real: true, tokens: EXAMPLE() });
 
   const CARDS = {
     car:        { deck: 'take', group: 'cost', icon: 'Car', name: 'New car', type: 'lump', amount: -20000 },
@@ -573,6 +578,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   let nextId = 1;
   const tok = (key, age) => (CARDS[key].type === 'pause' ? { id: nextId++, key, age, months: CARDS[key].months } : { id: nextId++, key, age });
   const isRange = (t) => CARDS[t.key].type === 'pause';
+  const onTimeline = (t) => t.age >= S.age && t.age < END && !(isRange(t) && t.age >= S.retire);
   const monthsOf = (t) => t.months || CARDS[t.key].months;
   const currency = () => CURRENCIES[S.currency];
   const local = (eur) => eur * currency().perEur;
@@ -582,7 +588,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   const EDIT = {
     lump: { get: priceOf, set: (t, v) => { t.price = v; }, label: (c) => (c.deck === 'take' ? 'Price today' : 'Amount today'), money: true, min: 0, max: () => local(5000000), step: (v) => local(v < local(5000) ? 500 : v < local(50000) ? 1000 : 5000) },
     monthly: { get: priceOf, set: (t, v) => { t.price = v; }, label: (c, retired) => (retired ? 'Extra income every month' : 'Extra invested every month'), money: true, min: 0, max: () => local(100000), step: () => local(10) },
-    pause: { get: monthsOf, set: (t, v) => { t.months = v; }, label: () => 'Months without investing', post: 'months', min: 1, max: (t) => Math.round((RETIRE - t.age) * 12), step: () => 1 },
+    pause: { get: monthsOf, set: (t, v) => { t.months = v; }, label: () => 'Months without investing', post: 'months', min: 1, max: (t) => Math.round((S.retire - t.age) * 12), step: () => 1 },
   };
   const snapM = (a) => Math.round(a * 12) / 12;
   function fmtAge(a) {
@@ -594,7 +600,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     return months > 12 ? `${(months / 12).toFixed(1)} yrs` : `${months} months`;
   }
   const fmtYears = (y) => (y >= 1 ? `${y.toFixed(1)} years` : `${Math.max(1, Math.round(y * 12))} months`);
-  const brokeAt = (m) => Math.floor(RETIRE + m / 12);
+  const brokeAt = (m) => Math.floor(S.retire + m / 12);
   const EXAMPLE = () => [tok('baby', 33), tok('car', 38), tok('kitchen', 47), tok('inherit', 55), tok('medical', 74)];
   let S = load();
 
@@ -634,7 +640,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   const viewArr = (arr, off) => Array.from(arr, (v, i) => deflate(v, off + i));
 
   function simulate(skipId, ignoreAll) {
-    const M = (RETIRE - S.age) * 12, g = Math.pow(1 + S.rate, 1 / 12), gDebt = Math.pow(1 + DEBT, 1 / 12);
+    const M = (S.retire - S.age) * 12, g = Math.pow(1 + S.rate, 1 / 12), gDebt = Math.pow(1 + DEBT, 1 / 12);
     const lump = new Float64Array(M), extra = new Float64Array(M), paused = new Uint8Array(M);
     if (!ignoreAll) {
       for (const t of S.tokens) {
@@ -660,13 +666,13 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   }
 
   function retire(start, ignoreAll, skipId) {
-    const base = (RETIRE - S.age) * 12, M = (END - RETIRE) * 12;
+    const base = (S.retire - S.age) * 12, M = (END - S.retire) * 12;
     const g = Math.pow(1 + S.rate, 1 / 12), gDebt = Math.pow(1 + DEBT, 1 / 12);
     const lump = new Float64Array(M), extra = new Float64Array(M);
     if (!ignoreAll) {
       for (const t of S.tokens) {
         if (t.id === skipId) continue;
-        const c = CARDS[t.key], m0 = Math.round((t.age - RETIRE) * 12);
+        const c = CARDS[t.key], m0 = Math.round((t.age - S.retire) * 12);
         if (m0 < 0 || m0 >= M || c.type === 'pause') continue;
         if (c.type === 'lump') lump[m0] += amountOf(t) * inflAt(base + m0);
         else for (let m = m0; m < M; m++) extra[m] += priceOf(t);
@@ -688,9 +694,9 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   function compute() {
     const promise = simulate(null, true), reality = simulate(null, false), M = reality.M;
     const rp = retire(promise.bal[M], true), rr = retire(reality.bal[M], false), RM = rr.M;
-    const per = S.tokens.filter((t) => t.age >= S.age && t.age < END && !(isRange(t) && t.age >= RETIRE)).map((t) => {
+    const per = S.tokens.filter(onTimeline).map((t) => {
       const c = CARDS[t.key];
-      if (t.age < RETIRE) {
+      if (t.age < S.retire) {
         const w = simulate(t.id, false), wr = retire(w.bal[M], false);
         return { t, c, phase: 'save', impact: deflate(reality.bal[M] - w.bal[M], M), skipped: reality.skipped - w.skipped, brokeWithout: wr.broke, endDiff: deflate(rr.bal[RM] - wr.bal[RM], M + RM) };
       }
@@ -713,7 +719,8 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   // ---------- setup pills ----------
   const pct2 = (v) => +(v * 100).toFixed(2);
   const CUSTOM = {
-    'pick-age': { key: 'age', min: 18, max: 64, step: 1, post: 'yrs', toIn: (v) => v, fromIn: (n) => Math.round(n), label: (v) => String(v) },
+    'pick-age': { key: 'age', min: 18, max: () => S.retire - 1, step: 1, post: 'yrs', toIn: (v) => v, fromIn: (n) => Math.round(n), label: (v) => String(v) },
+    'pick-retire': { key: 'retire', min: () => S.age + 1, max: 90, step: 1, post: 'yrs', toIn: (v) => v, fromIn: (n) => Math.round(n), label: (v) => String(v) },
     'pick-start': { key: 'start', min: 0, max: 5000000, step: 1000, money: true, toIn: (v) => v, fromIn: (n) => Math.round(n), label: (v) => money(v) },
     'pick-monthly': { key: 'monthly', min: 0, max: 50000, step: 10, money: true, toIn: (v) => v, fromIn: (n) => Math.round(n), label: (v) => money(v) },
     'pick-rate': { key: 'rate', min: 0, max: 20, step: 0.1, post: '%', toIn: pct2, fromIn: (n) => n / 100, label: (v) => `custom ${pct2(v)}%` },
@@ -752,11 +759,11 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   }
   function openCustom(id, btn, onPick) {
     const cfg = CUSTOM[id], before = S[cfg.key];
-    const max = cfg.money ? local(cfg.max) : cfg.max, [pre, post] = cfg.money ? moneyAffix() : [cfg.pre, cfg.post];
+    const lim = (v) => (typeof v === 'function' ? v() : v), min = lim(cfg.min), max = cfg.money ? local(cfg.max) : lim(cfg.max), [pre, post] = cfg.money ? moneyAffix() : [cfg.pre, cfg.post];
     const wrap = document.createElement('span'); wrap.className = 'custom-edit';
     const affix = (text) => { const a = document.createElement('span'); a.className = 'affix'; a.textContent = text; return a; };
     const input = document.createElement('input');
-    Object.assign(input, { type: 'number', inputMode: 'decimal', min: cfg.min, max, step: cfg.step, value: cfg.toIn(before) });
+    Object.assign(input, { type: 'number', inputMode: 'decimal', min, max, step: cfg.step, value: cfg.toIn(before) });
     input.style.width = Math.max(6, String(max).length + 1) + 'ch';
     input.setAttribute('aria-label', btn.closest('.pills').getAttribute('aria-label') + ', custom value');
     if (pre) wrap.append(affix(pre));
@@ -767,7 +774,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     const apply = () => {
       const n = parseFloat(input.value);
       if (!Number.isFinite(n)) return;
-      const v = cfg.fromIn(Math.min(max, Math.max(cfg.min, n)));
+      const v = cfg.fromIn(Math.min(max, Math.max(min, n)));
       if (v !== S[cfg.key]) onPick(v);
     };
     let done = false;
@@ -786,6 +793,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   }
   function buildSetup() {
     buildPills('pick-age', AGES.map((a) => [a, String(a)]), S.age, (v) => { S.age = v; afterChange(true); });
+    buildPills('pick-retire', RETIRES.map((a) => [a, String(a)]), S.retire, (v) => { S.retire = v; afterChange(true); });
     buildPills('pick-start', STARTS.map(local).map((v) => [v, money(v)]), S.start, (v) => { S.start = v; afterChange(true); });
     buildPills('pick-monthly', MONTHLY.map(local).map((m) => [m, money(m)]), S.monthly, (v) => { S.monthly = v; afterChange(true); });
     buildPills('pick-rate', RATES.map(([r, where, p]) => [r, `${where} ${p}`, `${p} average yearly return`]), S.rate, (v) => { S.rate = v; afterChange(true); });
@@ -794,9 +802,12 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     buildPills('pick-view', [[1, 'what it buys today', 'Adjusted for 2.5% yearly inflation'], [0, 'the number on paper', 'The amount on your statement at that age, before inflation']], S.real ? 1 : 0, (v) => { S.real = !!v; afterChange(true); });
   }
   function syncSetup() {
-    syncPills('pick-age', S.age); syncPills('pick-start', S.start); syncPills('pick-monthly', S.monthly); syncPills('pick-rate', S.rate); syncPills('pick-raise', S.raise); syncPills('pick-payout', S.payout);
+    syncPills('pick-age', S.age); syncPills('pick-retire', S.retire); syncPills('pick-start', S.start); syncPills('pick-monthly', S.monthly); syncPills('pick-rate', S.rate); syncPills('pick-raise', S.raise); syncPills('pick-payout', S.payout);
     syncPills('pick-view', S.real ? 1 : 0);
     currencySelect.value = S.currency;
+    document.querySelectorAll('#pick-age button:not(.custom)').forEach((b) => { b.disabled = +b.dataset.value >= S.retire; });
+    document.querySelectorAll('#pick-retire button:not(.custom)').forEach((b) => { b.disabled = +b.dataset.value <= S.age; });
+    document.querySelectorAll('[data-retire]').forEach((el) => { el.textContent = S.retire; });
   }
 
   const currencySelect = document.getElementById('pick-currency');
@@ -857,7 +868,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     animateValue('bill', document.getElementById('v-bill'), diff, (v) => money(v, true), instant);
     document.getElementById('s-promise').textContent = `${money(model.promise.put)} put in, nothing ever goes wrong`;
     const sr = document.getElementById('s-reality');
-    if (r < 0) sr.replaceChildren('You reach 65 ', strong(money(-r)), ' in debt');
+    if (r < 0) sr.replaceChildren(`You reach ${S.retire} `, strong(money(-r)), ' in debt');
     else if (rr.broke < 0) sr.replaceChildren('Lasts past ', strong(String(END)), ` taking ${money(S.payout)} a month`);
     else sr.replaceChildren('Broke at ', strong(String(brokeAt(rr.broke))), ` taking ${money(S.payout)} a month`);
     const isGain = diff > 0.5;
@@ -866,7 +877,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     document.getElementById('v-bill').className = 'value ' + (Math.abs(diff) < 0.5 ? '' : isGain ? 'give' : 'take');
     const before = per.filter((x) => x.phase === 'save');
     const nTake = before.filter((x) => x.c.deck === 'take').length, nGive = before.length - nTake;
-    document.getElementById('s-bill').textContent = before.length ? `${nTake} setback${nTake === 1 ? '' : 's'}, ${nGive} lucky break${nGive === 1 ? '' : 's'} before 65` : 'Nothing happened before 65';
+    document.getElementById('s-bill').textContent = before.length ? `${nTake} setback${nTake === 1 ? '' : 's'}, ${nGive} lucky break${nGive === 1 ? '' : 's'} before ${S.retire}` : `Nothing happened before ${S.retire}`;
   }
 
   function renderRetire() {
@@ -899,7 +910,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     const pot = reality.bal[M] / inflAt(M);
     document.getElementById('payout-hint').textContent = pot > 0
       ? `At today's prices; it rises with inflation. The 4% rule suggests about ${money(Math.round((pot * 0.04) / 12))} a month for your pot.`
-      : "At today's prices; it rises with inflation. Your pot is empty at 65.";
+      : `At today's prices; it rises with inflation. Your pot is empty at ${S.retire}.`;
   }
 
   // ---------- boards ----------
@@ -949,7 +960,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
         const t = S.tokens.find((v) => v.id === d.t.id);
         if (!t) return;
         const cx = Math.max(B.box.m.left, Math.min(B.box.W - B.box.m.right, event.x));
-        const months = Math.max(1, Math.min(Math.round((RETIRE - t.age) * 12), Math.round((B.X.invert(cx) - t.age) * 12)));
+        const months = Math.max(1, Math.min(Math.round((S.retire - t.age) * 12), Math.round((B.X.invert(cx) - t.age) * 12)));
         if (months !== t.months) { t.months = months; render(true); }
         showTip(B, tipFor(t), B.X(t.age + t.months / 12), 110, true);
       })
@@ -1028,7 +1039,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     const clean = ticks.filter((a, i) => i === 0 || x(a) - x(ticks[i - 1]) > 26);
     for (const a of clean) {
       G.axis.append('text').attr('class', 'tick').attr('x', x(a)).attr('y', y0 + 18).attr('text-anchor', 'middle').text(a);
-      if (cfg.mult) G.axis.append('text').attr('class', 'mult').attr('x', x(a)).attr('y', y0 + 38).attr('text-anchor', 'middle').text('×' + Math.pow(1 + S.rate, RETIRE - a).toFixed(1));
+      if (cfg.mult) G.axis.append('text').attr('class', 'mult').attr('x', x(a)).attr('y', y0 + 38).attr('text-anchor', 'middle').text('×' + Math.pow(1 + S.rate, S.retire - a).toFixed(1));
     }
     G.axis.append('text').attr('class', 'mult-label').attr('x', m.left - 10).attr('y', y0 + 18).attr('text-anchor', 'end').text('age');
     if (cfg.mult) G.axis.append('text').attr('class', 'mult-label').attr('x', m.left - 10).attr('y', y0 + 38).attr('text-anchor', 'end').text(withSymbol('1') + ' →');
@@ -1066,7 +1077,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   }
   function saveEnds(B, P, R, x, y, m) {
     const n = P.length - 1;
-    endLabels(B, [{ name: 'The promise', v: P[n], y: y(P[n]), cls: 'promise' }, { name: 'Reality', v: R[n], y: y(R[n]), cls: 'reality' }], x(RETIRE), m);
+    endLabels(B, [{ name: 'The promise', v: P[n], y: y(P[n]), cls: 'promise' }, { name: 'Reality', v: R[n], y: y(R[n]), cls: 'reality' }], x(S.retire), m);
   }
   function retireEnds(B, P, R, x, y, m) {
     const n = R.length - 1, { rp, rr } = model, items = [];
@@ -1074,8 +1085,8 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     if (rr.broke < 0) items.push({ name: 'Reality', v: R[n], y: y(R[n]), cls: 'reality' });
     endLabels(B, items, x(END), m);
     const marks = [];
-    if (rp.broke >= 0) marks.push({ a: RETIRE + rp.broke / 12, cls: 'promise', text: `Promise: broke at ${brokeAt(rp.broke)}` });
-    if (rr.broke >= 0) marks.push({ a: RETIRE + rr.broke / 12, cls: 'reality', text: `Broke at ${brokeAt(rr.broke)}` });
+    if (rp.broke >= 0) marks.push({ a: S.retire + rp.broke / 12, cls: 'promise', text: `Promise: broke at ${brokeAt(rp.broke)}` });
+    if (rr.broke >= 0) marks.push({ a: S.retire + rr.broke / 12, cls: 'reality', text: `Broke at ${brokeAt(rr.broke)}` });
     marks.forEach((mk, i) => {
       const mx = x(mk.a), near = i === 1 && Math.abs(x(marks[0].a) - mx) < 150;
       B.G.ends.append('circle').attr('class', 'broke-dot ' + mk.cls).attr('cx', mx).attr('cy', y(0)).attr('r', mk.cls === 'reality' ? 7 : 5);
@@ -1086,7 +1097,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
 
   function layoutTokens(B) {
     const [from, to] = B.cfg.range();
-    const items = S.tokens.filter((t) => t.age >= from && t.age < to).map((t) => {
+    const items = S.tokens.filter((t) => onTimeline(t) && t.age >= from && t.age < to).map((t) => {
       const c = CARDS[t.key], range = isRange(t), x0 = B.X(t.age);
       const w = range ? B.X(Math.min(to, t.age + monthsOf(t) / 12)) - x0 : 0;
       const knob = range ? Math.max(w, 34) : 0;
@@ -1110,7 +1121,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     if (!isRange(t)) return ageAt(B, px);
     const [from] = B.cfg.range();
     const cx = Math.max(B.box.m.left, Math.min(B.box.W - B.box.m.right, px - offset));
-    return Math.max(from, Math.min(RETIRE - monthsOf(t) / 12, snapM(B.X.invert(cx))));
+    return Math.max(from, Math.min(S.retire - monthsOf(t) / 12, snapM(B.X.invert(cx))));
   }
   function tipFor(t) {
     const c = CARDS[t.key];
@@ -1171,7 +1182,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     for (const tk of S.tokens) if (tk.fresh) setTimeout(() => { delete tk.fresh; }, 500);
   }
 
-  function boardFor(age) { return age >= RETIRE ? retireBoard : saveBoard; }
+  function boardFor(age) { return age >= S.retire ? retireBoard : saveBoard; }
   function focusToken(B, id) {
     const node = B.svg.node().querySelector(`g.tok[data-id="${id}"]`);
     if (node) node.focus();
@@ -1184,14 +1195,14 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openPop(t.id); return; }
     if (isRange(t) && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
       event.preventDefault();
-      t.months = Math.max(1, Math.min(Math.round((RETIRE - t.age) * 12), monthsOf(t) + (event.key === 'ArrowUp' ? 1 : -1)));
+      t.months = Math.max(1, Math.min(Math.round((S.retire - t.age) * 12), monthsOf(t) + (event.key === 'ArrowUp' ? 1 : -1)));
       save(); render(true); focusToken(B, t.id);
       return;
     }
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       event.preventDefault();
       const step = isRange(t) && !event.shiftKey ? 1 / 12 : 1;
-      const maxAge = isRange(t) ? RETIRE - monthsOf(t) / 12 : to - 1;
+      const maxAge = isRange(t) ? S.retire - monthsOf(t) / 12 : to - 1;
       t.age = Math.max(from, Math.min(maxAge, snapM(t.age + (event.key === 'ArrowLeft' ? -step : step))));
       save(); render(true); focusToken(B, t.id);
     }
@@ -1250,14 +1261,14 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     const ageIn = document.createElement('input');
     Object.assign(ageIn, { type: 'number', inputMode: 'numeric', className: 'age-in', step: 1, value: Math.floor(t.age) });
     ageIn.setAttribute('aria-label', 'Age');
-    const ageRange = () => [S.age, isRange(t) ? Math.floor(RETIRE - monthsOf(t) / 12) : END - 1];
+    const ageRange = () => [S.age, isRange(t) ? Math.floor(S.retire - monthsOf(t) / 12) : END - 1];
     const applyAge = (strict) => {
       const n = parseInt(ageIn.value, 10);
       if (!Number.isFinite(n)) return;
       const [lo, hi] = ageRange();
       if (strict && (n < lo || n > hi)) return;
       let a = Math.max(lo, Math.min(hi, n));
-      if (isRange(t)) a = Math.min(RETIRE - monthsOf(t) / 12, a + (t.age - Math.floor(t.age)));
+      if (isRange(t)) a = Math.min(S.retire - monthsOf(t) / 12, a + (t.age - Math.floor(t.age)));
       a = snapM(a);
       if (a === t.age) return;
       const crossed = boardFor(a) !== boardFor(t.age);
@@ -1346,7 +1357,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
 
   // ---------- adding / removing ----------
   function randomAge(key, taken = S.tokens.map((t) => t.age)) {
-    const hi = CARDS[key].type === 'pause' ? RETIRE - 2 : END - 2, lo = S.age + 1;
+    const hi = CARDS[key].type === 'pause' ? S.retire - 2 : END - 2, lo = S.age + 1;
     const pick = () => lo + Math.floor(Math.random() * (hi - lo + 1));
     for (let tries = 0; tries < 40; tries++) {
       const a = pick();
@@ -1355,8 +1366,8 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     return pick();
   }
   function addToken(key, age, quiet, reveal) {
-    if (CARDS[key].type === 'pause' && age >= RETIRE) {
-      toast(CARDS[key].icon, "After 65 you're not investing anymore, so there's nothing to pause.");
+    if (CARDS[key].type === 'pause' && age >= S.retire) {
+      toast(CARDS[key].icon, `After ${S.retire} you're not investing anymore, so there's nothing to pause.`);
       return null;
     }
     const t = tok(key, age);
@@ -1435,7 +1446,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       const xx = hit.B.X(hit.age);
       if (ok) hit.B.dropLine.style('display', null).attr('x1', xx).attr('x2', xx).attr('y1', 6).attr('y2', hit.B.box.y0);
       hit.B.dropText.style('display', null).attr('x', ok ? xx : hit.B.box.W / 2).attr('y', ok ? hit.B.box.y0 - 10 : hit.B.box.H / 2)
-        .classed('no', !ok).text(ok ? `Age ${hit.age}` : 'Nothing to pause after 65');
+        .classed('no', !ok).text(ok ? `Age ${hit.age}` : `Nothing to pause after ${S.retire}`);
     };
     const up = (e) => {
       const hit = moved ? dropTarget(e.clientX, e.clientY) : null;
@@ -1462,10 +1473,10 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     }
     const imp = money(Math.abs(impact));
     let s;
-    if (c.type === 'lump' && c.deck === 'take') s = `It cost ${money(then)} at ${t.age}. Left invested, that money would have been ${imp} by 65.`;
-    else if (c.type === 'lump') s = `${money(then)} landed at ${t.age}. Invested, it grows into ${imp} by 65.`;
-    else if (c.type === 'pause') s = `${fmtLen(monthsOf(t))} without investing, from ${fmtAge(t.age)} to ${fmtAge(Math.min(RETIRE, t.age + monthsOf(t) / 12))} (${money(deflate(skipped, m0))} skipped). That gap costs ${imp} at 65.`;
-    else s = `${money(priceOf(t))} more every month from ${t.age} adds up to ${imp} by 65.`;
+    if (c.type === 'lump' && c.deck === 'take') s = `It cost ${money(then)} at ${t.age}. Left invested, that money would have been ${imp} by ${S.retire}.`;
+    else if (c.type === 'lump') s = `${money(then)} landed at ${t.age}. Invested, it grows into ${imp} by ${S.retire}.`;
+    else if (c.type === 'pause') s = `${fmtLen(monthsOf(t))} without investing, from ${fmtAge(t.age)} to ${fmtAge(Math.min(S.retire, t.age + monthsOf(t) / 12))} (${money(deflate(skipped, m0))} skipped). That gap costs ${imp} at ${S.retire}.`;
+    else s = `${money(priceOf(t))} more every month from ${t.age} adds up to ${imp} by ${S.retire}.`;
     const after = model.reality.bal[Math.min(model.M, m0 + 1)];
     if (c.type === 'lump' && c.deck === 'take' && after < 0) s += ` Your investments couldn't cover it, so you went ${money(deflate(-after, m0 + 1))} into debt at ${DEBT * 100}% interest.`;
     return `${s} In retirement: ${effect}.`;
@@ -1488,17 +1499,17 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     const v = it.impact;
     const what = it.c.type === 'pause' ? `${it.c.name}, ${fmtLen(monthsOf(it.t))} without investing`
       : `${it.c.name} at ${it.t.age}`;
-    toast(it.c.icon, `${what}: ${Math.abs(v) < 1 ? 'no change' : money(v, true)} at 65`);
+    toast(it.c.icon, `${what}: ${Math.abs(v) < 1 ? 'no change' : money(v, true)} at ${S.retire}`);
   }
 
   // ---------- main ----------
   const saveBoard = makeBoard({
     key: 'save', id: 'chart', empty: 'empty-hint', mult: true, ends: saveEnds,
-    range: () => [S.age, RETIRE], series: () => ({ P: model.P, R: model.R }), accepts: () => true,
+    range: () => [S.age, S.retire], series: () => ({ P: model.P, R: model.R }), accepts: () => true,
   });
   const retireBoard = makeBoard({
     key: 'retire', id: 'chart-retire', empty: 'empty-retire', mult: false, ends: retireEnds,
-    range: () => [RETIRE, END], series: () => ({ P: model.RP, R: model.RR }), accepts: (key) => CARDS[key].type !== 'pause',
+    range: () => [S.retire, END], series: () => ({ P: model.RP, R: model.RR }), accepts: (key) => CARDS[key].type !== 'pause',
   });
 
   let raf = null;
@@ -1606,7 +1617,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     return {
       app: 'because-life-happens', version: 1, exportedAt: new Date().toISOString(),
       state: {
-        currency: S.currency, age: S.age, start: S.start, monthly: S.monthly, rate: S.rate, raise: S.raise, payout: S.payout, real: S.real,
+        currency: S.currency, age: S.age, retire: S.retire, start: S.start, monthly: S.monthly, rate: S.rate, raise: S.raise, payout: S.payout, real: S.real,
         tokens: S.tokens.map(({ id, key, age, months, price }) => ({ id, key, age, months, price })),
       },
     };
@@ -1699,12 +1710,12 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     text(right, W - M - width(right, 9), H - 44, 9, font, C.faint);
     y = H - 78 - 30;
 
-    text('The brochure promises a fortune at 65.', M, y - 20, 20, bold, C.ink); y -= 26;
+    text(`The brochure promises a fortune at ${S.retire}.`, M, y - 20, 20, bold, C.ink); y -= 26;
     text('Life has other plans.', M, y - 20, 20, bold, C.pink); y -= 32;
 
     const rateLabel = RATES.find(([r]) => r === S.rate);
     const where = rateLabel ? `${rateLabel[1]} (${rateLabel[2]} a year)` : `investments returning ${pct2(S.rate)}% a year`;
-    para(`I'm ${S.age} with ${money(S.start)} already invested, and add ${money(S.monthly)} a month in ${where}, raising it ${pct2(S.raise)}% each year. ` +
+    para(`I'm ${S.age} with ${money(S.start)} already invested, and add ${money(S.monthly)} a month in ${where}, raising it ${pct2(S.raise)}% each year until I retire at ${S.retire}. ` +
       `In retirement I take out ${money(S.payout)} a month at today's prices. ` +
       `Amounts are in ${currencyName(S.currency)} (${S.currency}) and ` +
       (S.real ? 'show what the money buys today (2.5% yearly inflation removed).' : 'are the numbers on paper, before inflation.'), 10.5, CW, font, C.text, 1.5);
@@ -1714,9 +1725,9 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     const { P: PV, R: RV, M: MM, rr, per } = model;
     const diff = RV[MM] - PV[MM];
     const tiles = [
-      ['The promise at 65', money(PV[MM]), C.ink, `${money(model.promise.put)} put in, nothing goes wrong`],
-      ['Your reality at 65', money(RV[MM]), C.pink, RV[MM] < 0 ? `${money(-RV[MM])} in debt at 65` : rr.broke < 0 ? `Lasts past ${END} at ${money(S.payout)} a month` : `Broke at ${brokeAt(rr.broke)} at ${money(S.payout)} a month`],
-      [diff > 0.5 ? "Life's bonus" : "Life's bill", money(diff, true), diff > 0.5 ? C.give : C.take, `${per.filter((x) => x.phase === 'save').length} events before 65`],
+      [`The promise at ${S.retire}`, money(PV[MM]), C.ink, `${money(model.promise.put)} put in, nothing goes wrong`],
+      [`Your reality at ${S.retire}`, money(RV[MM]), C.pink, RV[MM] < 0 ? `${money(-RV[MM])} in debt at ${S.retire}` : rr.broke < 0 ? `Lasts past ${END} at ${money(S.payout)} a month` : `Broke at ${brokeAt(rr.broke)} at ${money(S.payout)} a month`],
+      [diff > 0.5 ? "Life's bonus" : "Life's bill", money(diff, true), diff > 0.5 ? C.give : C.take, `${per.filter((x) => x.phase === 'save').length} events before ${S.retire}`],
     ];
     const tw = (CW - 16) / 3, th = 58;
     ensure(th + 10);
@@ -1730,10 +1741,10 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     });
     y -= th + 8;
 
-    heading('Saving until 65', 'Dashed line: the promise. Pink line: your reality with every life event below. The shaded gap is what life took (or gave).');
+    heading(`Saving until ${S.retire}`, 'Dashed line: the promise. Pink line: your reality with every life event below. The shaded gap is what life took (or gave).');
     await image(pngs[0], shots[0].w, shots[0].h);
 
-    heading('Retirement', `From 65 you stop investing and take out ${money(S.payout)} a month at today's prices, rising with inflation.`, 48 + 58 + CW * (shots[1].h / shots[1].w) + 12);
+    heading('Retirement', `From ${S.retire} you stop investing and take out ${money(S.payout)} a month at today's prices, rising with inflation.`, 48 + 58 + CW * (shots[1].h / shots[1].w) + 12);
     const stats = [...document.querySelectorAll('#ret-stats .stat')].map((st) => [st.querySelector('.k').textContent, st.querySelector('.v').textContent, st.querySelector('.s')?.textContent || '']);
     const sw = (CW - 16) / 3, sh = 48;
     ensure(sh + 10);
@@ -1755,7 +1766,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       const what = c.type === 'pause' ? `No investing for ${fmtLen(monthsOf(t))}`
         : c.type === 'monthly' ? `+${money(priceOf(t))} a month`
         : `${c.deck === 'take' ? '-' : '+'}${money(priceOf(t))} at today's prices`;
-      const effect = it.phase === 'save' ? `${money(it.impact, true)} at 65` : retireEffect(it);
+      const effect = it.phase === 'save' ? `${money(it.impact, true)} at ${S.retire}` : retireEffect(it);
       const storyLines = wrap(story(it), 8.5, CW - 22);
       const need = 30 + storyLines.length * 12;
       ensure(need);
@@ -1790,7 +1801,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     const payload = scenarioPayload();
     const json = JSON.stringify(payload);
     doc.setTitle('Because life happens: my scenario');
-    doc.setSubject(pdfText(`Promise ${money(PV[MM])} vs reality ${money(RV[MM])} at 65`));
+    doc.setSubject(pdfText(`Promise ${money(PV[MM])} vs reality ${money(RV[MM])} at ${S.retire}`));
     doc.setKeywords(['because-life-happens', 'scenario', 'investing']);
     doc.setCreator(`Because life happens (${SITE})`);
     doc.setProducer('pdf-lib');
@@ -1821,6 +1832,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     if (!st) throw new Error("This file doesn't contain a scenario from this playground.");
     const num = (v, lo, hi, d) => (v !== null && v !== '' && Number.isFinite(+v) ? Math.min(hi, Math.max(lo, +v)) : d);
     const D = DEFAULTS(), code = CURRENCIES[st.currency] ? st.currency : D.currency, k = CURRENCIES[code].perEur;
+    const retire = Math.round(num(st.retire, 19, 90, D.retire));
     const tokens = (Array.isArray(st.tokens) ? st.tokens : []).filter((t) => t && CARDS[t.key]).map((t, i) => {
       const o = { id: i + 1, key: t.key, age: snapM(num(t.age, 18, END - 1, 40)) };
       if (CARDS[t.key].type === 'pause') o.months = Math.round(num(t.months, 1, 600, CARDS[t.key].months));
@@ -1829,7 +1841,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       return o;
     });
     S = {
-      currency: code, age: Math.round(num(st.age, 18, 64, D.age)), start: Math.round(num(st.start, 0, 5e6 * k, D.start)), monthly: num(st.monthly, 0, 50000 * k, D.monthly * k), rate: num(st.rate, 0, 0.2, D.rate),
+      currency: code, retire, age: Math.round(num(st.age, 18, retire - 1, Math.min(D.age, retire - 1))), start: Math.round(num(st.start, 0, 5e6 * k, D.start)), monthly: num(st.monthly, 0, 50000 * k, D.monthly * k), rate: num(st.rate, 0, 0.2, D.rate),
       raise: num(st.raise, 0, 0.2, D.raise), payout: num(st.payout, 0, 50000 * k, D.payout * k), real: st.real !== false, tokens,
     };
     nextId = tokens.length + 1;
