@@ -104,12 +104,6 @@ h1 .pink { color: var(--pink); }
 .panel .hint { margin: 2px 0 0; color: var(--muted); font-size: 13.5px; }
 .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
-.switch { display: inline-flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--muted); border: 0; background: transparent; padding: 0 4px; height: 38px; }
-.switch .track { width: 34px; height: 20px; border-radius: 999px; background: var(--line); position: relative; transition: background 0.15s; }
-.switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform 0.15s; }
-.switch[aria-checked="true"] { color: var(--fg); }
-.switch[aria-checked="true"] .track { background: var(--pink); }
-.switch[aria-checked="true"] .track::after { transform: translateX(14px); }
 
 .chart { position: relative; height: 420px; margin-top: 10px; border-radius: 12px; transition: box-shadow 0.15s, background 0.15s; touch-action: pan-y; }
 .chart.is-drop { background: rgba(253, 54, 110, 0.04); box-shadow: inset 0 0 0 1.5px rgba(253, 54, 110, 0.5); }
@@ -290,7 +284,8 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       <span class="pills" id="pick-rate" role="group" aria-label="Where you invest"></span>
       <span class="word">raising it</span>
       <span class="pills" id="pick-raise" role="group" aria-label="Yearly raise of the monthly amount"></span>
-      <span class="word">each year</span>
+      <span class="word">each year, shown in</span>
+      <span class="pills" id="pick-view" role="group" aria-label="Show money as"></span>
     </div>
   </section>
 
@@ -319,9 +314,6 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
           <div>
             <h2>Saving until 65</h2>
             <p class="hint">Drop cards on it. Drag icons to move them in time, pull a pause bar's handle to make it longer. Click an icon to change it or remove it.</p>
-          </div>
-          <div class="tools">
-            <button class="switch" id="real" type="button" role="switch" aria-checked="false"><span class="track" aria-hidden="true"></span>Today's money</button>
           </div>
         </div>
         <div class="chart" id="chart">
@@ -601,10 +593,11 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     buildPills('pick-rate', RATES.map(([r, where, p]) => [r, `${where} ${p}`, `${p} average yearly return`]), S.rate, (v) => { S.rate = v; afterChange(true); });
     buildPills('pick-raise', RAISES.map((r) => [r, `${Math.round(r * 100)}%`, r ? `Invest ${Math.round(r * 100)}% more every year` : 'Same amount every year']), S.raise, (v) => { S.raise = v; afterChange(true); });
     buildPills('pick-payout', PAYOUTS.map((p) => [p, money(p)]), S.payout, (v) => { S.payout = v; afterChange(true); });
+    buildPills('pick-view', [[1, "today's money", 'Remove inflation: what the money would buy today'], [0, 'future money', 'The number on your statement at that age']], S.real ? 1 : 0, (v) => { S.real = !!v; afterChange(true); });
   }
   function syncSetup() {
     syncPills('pick-age', S.age); syncPills('pick-monthly', S.monthly); syncPills('pick-rate', S.rate); syncPills('pick-raise', S.raise); syncPills('pick-payout', S.payout);
-    document.getElementById('real').setAttribute('aria-checked', String(S.real));
+    syncPills('pick-view', S.real ? 1 : 0);
   }
 
   // ---------- decks ----------
@@ -1263,7 +1256,6 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   }
   function afterChange(animate) { syncSetup(); closePop(); save(); render(!animate); }
 
-  document.getElementById('real').addEventListener('click', () => { S.real = !S.real; afterChange(true); });
   document.getElementById('clear').addEventListener('click', () => { S.tokens = []; afterChange(true); });
   document.getElementById('reset').addEventListener('click', () => {
     nextId = 1;
