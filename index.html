@@ -202,6 +202,14 @@ h1 .pink { color: var(--pink); }
 .pop-card { position: absolute; z-index: 12; width: 300px; background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); display: grid; gap: 8px; font-size: 13.5px; }
 .pop-card .t { font-family: var(--font-display); font-size: 16px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
 .pop-card .t .ic { color: var(--pink); flex: none; }
+.pop-card .t { gap: 6px; }
+.pop-card .t .ic { margin-right: 2px; }
+.age-in {
+  width: 3.4ch; padding: 0 2px; border: 0; border-bottom: 1.5px dashed var(--muted); border-radius: 0; background: transparent;
+  color: var(--fg); font: inherit; text-align: center; outline: none; -moz-appearance: textfield; transition: border-color 0.15s;
+}
+.age-in:hover, .age-in:focus { border-bottom-color: var(--pink); }
+.age-in::-webkit-outer-spin-button, .age-in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .price .lbl { color: var(--muted); font-size: 12.5px; }
 .seg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border-radius: 9px; background: var(--bg); border: 1px solid var(--line); }
 .seg2 button { border: 0; background: transparent; border-radius: 6px; padding: 6px 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
@@ -223,6 +231,11 @@ h1 .pink { color: var(--pink); }
 .decks { display: grid; gap: 12px; }
 .hand { display: grid; gap: 14px; padding: 14px; }
 .deck-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.deck-head + .cards { margin-top: 10px; }
+.hand-hint { margin: -2px 0 0; display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12.5px; }
+.hand-hint .ic { color: var(--pink); flex: none; }
+.card.nudge, .custom-chip.nudge { animation: nudge 0.45s ease; }
+@keyframes nudge { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-6px); } 50% { transform: translateY(0); } 75% { transform: translateY(-3px); } }
 .custom-chip {
   display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 7px; border-radius: 999px;
   border: 1px dashed #3d3d42; background: transparent; color: var(--muted); font-size: 12px; font-weight: 600;
@@ -279,7 +292,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   .decks::-webkit-scrollbar { display: none; }
   .decks .panel, .hand, .deck, .cards, .deck-head, .custom-slot { display: contents; }
   .custom-chip { flex: none; height: auto; border-radius: 10px; padding: 0 14px 0 10px; touch-action: pan-x; }
-  .deck-sub { display: none; }
+  .deck-sub, .hand-hint { display: none; }
   .deck-label { flex: none; width: 58px; align-self: center; flex-direction: column; align-items: flex-start; gap: 5px; padding-left: 8px; font-size: 10px; line-height: 1.25; letter-spacing: 0.06em; }
   .deck-actions .btn, .deck-actions .btn-primary { flex: none; height: auto; padding: 0 12px; }
   .t-long { display: none; }
@@ -364,7 +377,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
         <div class="panel-head">
           <div>
             <h2>Saving until 65</h2>
-            <p class="hint">Drop cards on it. Drag icons to move them in time, pull a pause bar's handle to make it longer. Click an icon to change it or remove it.</p>
+            <p class="hint">Drag cards onto it. Drag icons to move them in time and pull a pause bar's handle to make it longer. Click an icon to change it, remove it, or pay by pausing your investing instead of selling.</p>
           </div>
         </div>
         <div class="chart" id="chart">
@@ -378,7 +391,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
         <div class="panel-head">
           <div>
             <h2>Retirement</h2>
-            <p class="hint">At 65 you stop investing and live off your pot. Prices keep rising, so what you take out grows every year. Life happens here too: drop cards on this chart.</p>
+            <p class="hint">At 65 you stop investing and live off your pot. Prices keep rising, so what you take out grows every year. Life happens here too: drag cards onto this chart.</p>
           </div>
         </div>
         <div class="setup compact" role="group" aria-label="Retirement plan">
@@ -400,14 +413,13 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
         <button class="btn" id="clear" type="button">Clear</button>
       </div>
       <div class="panel hand">
+        <p class="hand-hint"><span data-icon="HandGrab"></span>Drag a card onto either chart</p>
         <section class="deck take">
           <div class="deck-head"><h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life takes</h3><span class="custom-slot" id="custom-cost"></span></div>
-          <p class="deck-sub">Click one on the chart to pay by pausing instead.</p>
           <div class="cards" id="deck-cost"></div>
         </section>
         <section class="deck take">
           <div class="deck-head"><h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life pauses</h3><span class="custom-slot" id="custom-pause"></span></div>
-          <p class="deck-sub">Pull the handle on the chart to change how long.</p>
           <div class="cards" id="deck-pause"></div>
         </section>
         <section class="deck give">
@@ -719,11 +731,11 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       b.type = 'button';
       if (c.custom) {
         b.className = 'custom-chip';
-        b.title = c.type === 'pause' ? 'Drag onto the chart, then set how long' : 'Drag onto a chart, then type the amount';
+        b.title = c.type === 'pause' ? 'Drag onto the saving chart, then set how long' : 'Drag onto a chart, then type the amount';
         b.append(icon(c.icon, 15), c.type === 'pause' ? 'Custom pause' : 'Custom');
         document.getElementById('custom-' + c.group).append(b);
       } else {
-        b.className = 'card'; b.title = 'Drag onto a chart, or click to drop it at a random age';
+        b.className = 'card'; b.title = 'Drag onto a chart';
         const em = document.createElement('span'); em.className = 'em'; em.append(icon(c.icon, 18));
         const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = c.name;
         const fx = document.createElement('span'); fx.className = 'fx'; fx.textContent = effectText(c);
@@ -1136,13 +1148,36 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   // ---------- popover ----------
   const pop = document.getElementById('pop');
   let popStory = null;
-  function openPop(id, focusValue) {
+  function openPop(id, focus) {
     const it = model.per.find((p) => p.t.id === id);
     if (!it) return;
     selectedId = id;
     hideTip();
     const t = it.t, ed = EDIT[it.c.type], B = boardFor(t.age);
-    const title = document.createElement('div'); title.className = 't'; title.append(icon(it.c.icon, 18), `${it.c.name} at ${fmtAge(t.age)}`);
+    const title = document.createElement('div'); title.className = 't';
+    const ageIn = document.createElement('input');
+    Object.assign(ageIn, { type: 'number', inputMode: 'numeric', className: 'age-in', step: 1, value: Math.floor(t.age) });
+    ageIn.setAttribute('aria-label', 'Age');
+    const ageRange = () => [S.age, isRange(t) ? Math.floor(RETIRE - monthsOf(t) / 12) : END - 1];
+    const applyAge = (strict) => {
+      const n = parseInt(ageIn.value, 10);
+      if (!Number.isFinite(n)) return;
+      const [lo, hi] = ageRange();
+      if (strict && (n < lo || n > hi)) return;
+      let a = Math.max(lo, Math.min(hi, n));
+      if (isRange(t)) a = Math.min(RETIRE - monthsOf(t) / 12, a + (t.age - Math.floor(t.age)));
+      a = snapM(a);
+      if (a === t.age) return;
+      const crossed = boardFor(a) !== boardFor(t.age);
+      t.age = a;
+      save(); render(true);
+      if (crossed) openPop(t.id, 'age'); else positionPop();
+    };
+    ageIn.min = ageRange()[0]; ageIn.max = ageRange()[1];
+    ageIn.addEventListener('input', () => applyAge(true));
+    ageIn.addEventListener('change', () => { applyAge(false); ageIn.value = Math.floor(t.age); toastFor(t.id); });
+    ageIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); ageIn.blur(); } });
+    title.append(icon(it.c.icon, 18), `${it.c.name} at`, ageIn);
     popStory = document.createElement('p'); popStory.textContent = story(it);
 
     const field = document.createElement('div'); field.className = 'price';
@@ -1202,19 +1237,28 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     keep.addEventListener('click', closePop);
     actions.append(rm, keep);
     pop.replaceChildren(...[title, popStory, field, payRow, actions].filter(Boolean));
-    B.panel.append(pop);
     pop.hidden = false;
+    positionPop();
+    boards.forEach(drawTokens);
+    if (focus === 'age') { ageIn.focus(); ageIn.select(); }
+    else if (focus === 'value' || matchMedia('(pointer: fine)').matches) { input.focus(); input.select(); }
+    else keep.focus();
+  }
+  function positionPop() {
+    const t = S.tokens.find((v) => v.id === selectedId);
+    if (!t || pop.hidden) return;
+    const B = boardFor(t.age);
+    if (pop.parentElement !== B.panel) B.panel.append(pop);
     const W = B.panel.clientWidth, x = B.X(t.age);
-    const lane = layoutTokens(B).find((v) => v.t.id === id)?.lane || 0;
+    const lane = layoutTokens(B).find((v) => v.t.id === t.id)?.lane || 0;
     pop.style.left = Math.max(8, Math.min(W - 308, B.el.offsetLeft + x - 30)) + 'px';
     pop.style.top = (B.el.offsetTop + LANES[lane] + 30) + 'px';
-    boards.forEach(drawTokens);
-    if (focusValue || matchMedia('(pointer: fine)').matches) { input.focus(); input.select(); } else keep.focus();
   }
   function refreshPop() {
     if (selectedId === null || !popStory) return;
     const it = model.per.find((p) => p.t.id === selectedId);
     if (it) popStory.textContent = story(it);
+    positionPop();
   }
   function closePop() {
     if (selectedId === null) return;
@@ -1245,7 +1289,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     t.fresh = true;
     S.tokens.push(t);
     closePop(); save(); render(false);
-    if (CARDS[key].custom && !quiet) setTimeout(() => openPop(t.id, true), reveal ? 350 : 0);
+    if (CARDS[key].custom && !quiet) setTimeout(() => openPop(t.id, 'value'), reveal ? 350 : 0);
     else if (!quiet) toastFor(t.id);
     if (reveal) {
       const B = boardFor(t.age), r = B.el.getBoundingClientRect();
@@ -1272,8 +1316,15 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       B.dropLine.style('display', 'none'); B.dropText.style('display', 'none');
     }
   }
+  function nudge(el) {
+    el.classList.remove('nudge');
+    void el.offsetWidth;
+    el.classList.add('nudge');
+    toast('HandGrab', 'Drag the card onto a chart to place it.');
+  }
   function startCardDrag(key, e0) {
     if (e0.button > 0) return;
+    const source = e0.currentTarget;
     e0.preventDefault();
     const c = CARDS[key];
     let moved = false;
@@ -1303,7 +1354,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     const up = (e) => {
       const hit = moved ? dropTarget(e.clientX, e.clientY) : null;
       clear();
-      if (!moved) addToken(key, randomAge(key), false, true);
+      if (!moved) nudge(source);
       else if (hit) addToken(key, hit.age);
     };
     window.addEventListener('pointermove', move);
