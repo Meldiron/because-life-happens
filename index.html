@@ -112,6 +112,7 @@ h1 .pink { color: var(--pink); }
 .boards { display: grid; gap: 16px; min-width: 0; }
 .deck-actions { display: flex; gap: 8px; padding: 12px; grid-column: 1 / -1; }
 .deck-actions .btn-primary { flex: 1; justify-content: center; }
+.t-short { display: none; }
 .decks { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; overscroll-behavior: contain; border-radius: var(--radius); }
 .setup.compact { margin-top: 14px; padding: 10px 12px; font-size: 16px; background: var(--bg); }
 .payout-hint { margin-top: 8px !important; }
@@ -159,7 +160,7 @@ h1 .pink { color: var(--pink); }
 .drop-line { stroke: var(--pink); stroke-width: 1.5; stroke-dasharray: 4 4; pointer-events: none; }
 .drop-label { fill: var(--pink); font-weight: 600; font-size: 13px; }
 
-.tok { cursor: grab; outline: none; }
+.tok { cursor: grab; outline: none; touch-action: none; }
 .tok.dragging { cursor: grabbing; }
 .tok-hit { fill: transparent; }
 .tok-ring { fill: var(--raised); stroke-width: 2.5; transition: stroke-width 0.12s; }
@@ -175,7 +176,7 @@ h1 .pink { color: var(--pink); }
 @keyframes pop { from { transform: scale(0.2) translateY(-30px); opacity: 0; } to { transform: none; opacity: 1; } }
 .tok-bar { fill: var(--take-soft); stroke: var(--take); stroke-width: 1.5; }
 .tok-link { stroke: var(--take); stroke-width: 1.5; stroke-dasharray: 2 3; pointer-events: none; }
-.tok-knob { cursor: ew-resize; outline: none; }
+.tok-knob { cursor: ew-resize; outline: none; touch-action: none; }
 .tok-knob .knob-hit { fill: transparent; }
 .tok-knob .knob { fill: var(--raised); stroke: var(--take); stroke-width: 2; transition: stroke-width 0.12s; }
 .tok-knob:hover .knob, .tok-knob.dragging .knob { stroke-width: 3; }
@@ -215,27 +216,27 @@ h1 .pink { color: var(--pink); }
 .stepper input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: var(--fg); font: 600 15px var(--font-body); font-variant-numeric: tabular-nums; text-align: center; outline: none; -moz-appearance: textfield; }
 .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-.decks { display: grid; gap: 16px; }
-.deck-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.deck-title h3 { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 18px; display: flex; align-items: center; gap: 9px; }
-.deck-title .badge { width: 10px; height: 10px; border-radius: 50%; }
-.deck.take .badge { background: var(--take); box-shadow: 0 0 12px var(--take); }
-.deck.give .badge { background: var(--give); box-shadow: 0 0 12px var(--give); }
-.deck-sub { margin: 2px 0 12px; color: var(--muted); font-size: 13px; }
-.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.decks { display: grid; gap: 12px; }
+.hand { display: grid; gap: 16px; padding: 14px; }
+.deck-label { margin: 0; display: flex; align-items: center; gap: 8px; font: 600 12px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-2); }
+.deck-label .badge { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.deck.take .badge { background: var(--take); box-shadow: 0 0 10px var(--take); }
+.deck.give .badge { background: var(--give); box-shadow: 0 0 10px var(--give); }
+.deck-sub { margin: 3px 0 0; color: var(--muted); font-size: 12px; line-height: 1.4; }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
 .card {
-  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 10px; align-items: center; text-align: left;
-  padding: 10px 11px; border-radius: 12px; border: 1px solid var(--line); background: var(--raised);
-  cursor: grab; touch-action: none; user-select: none; transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 9px; align-items: center; text-align: left; min-width: 0;
+  padding: 7px 9px; border-radius: 10px; border: 1px solid var(--line); background: var(--raised);
+  cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 .card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35); }
 .deck.take .card:hover { border-color: rgba(249, 156, 0, 0.6); }
 .deck.give .card:hover { border-color: rgba(0, 187, 127, 0.6); }
-.card .em { grid-row: span 2; width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; }
+.card .em { grid-row: span 2; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; }
 .deck.take .card .em { color: var(--take); background: var(--take-soft); }
 .deck.give .card .em { color: var(--give); background: var(--give-soft); }
-.card .nm { font-weight: 600; font-size: 13.5px; line-height: 1.25; }
-.card .fx { font-family: var(--font-mono); font-size: 11.5px; line-height: 1.3; }
+.card .nm { font-weight: 600; font-size: 13px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .fx { font-family: var(--font-mono); font-size: 11px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .deck.take .fx { color: var(--take); }
 .deck.give .fx { color: var(--give); }
 
@@ -250,14 +251,48 @@ h1 .pink { color: var(--pink); }
 footer { margin-top: 40px; padding-block: 24px 48px; border-top: 1px solid var(--hair); color: var(--faint); font-size: 13px; }
 footer p { margin: 0 0 6px; max-width: 100ch; }
 
-@media (max-width: 1100px) { .board { grid-template-columns: minmax(0, 1fr); } .decks { position: static; max-height: none; overflow: visible; grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 1100px) {
+  .board { grid-template-columns: minmax(0, 1fr); }
+  main.wrap { padding-bottom: 96px; }
+  .decks {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 30; max-height: none; border-radius: 0;
+    display: flex; align-items: stretch; gap: 8px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: rgba(25, 25, 28, 0.94); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-top: 1px solid var(--line); box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.35);
+  }
+  .decks::-webkit-scrollbar { display: none; }
+  .decks .panel, .hand, .deck, .cards { display: contents; }
+  .deck-sub { display: none; }
+  .deck-label { flex: none; width: 58px; align-self: center; flex-direction: column; align-items: flex-start; gap: 5px; padding-left: 8px; font-size: 10px; line-height: 1.25; letter-spacing: 0.06em; }
+  .deck-actions .btn, .deck-actions .btn-primary { flex: none; height: auto; padding: 0 12px; }
+  .t-long { display: none; }
+  .t-short { display: inline; }
+  .card { flex: none; width: 168px; touch-action: pan-x; }
+  .card:hover { transform: none; box-shadow: none; }
+  .toast { bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+}
 @media (max-width: 760px) {
   .score { grid-template-columns: minmax(0, 1fr); }
-  .ret-stats { grid-template-columns: minmax(0, 1fr); }
-  .decks { grid-template-columns: minmax(0, 1fr); }
+  .ret-stats { gap: 6px; }
+  .stat { padding: 8px 9px; }
+  .stat .v { font-size: 20px; white-space: nowrap; }
+  .stat .k, .stat .s { font-size: 11px; }
   .chart { height: 360px; }
   .setup { font-size: 16px; }
   .hero { padding-block: 32px 20px; }
+  .panel { padding: 14px; }
+}
+@media (max-width: 560px) {
+  .setup { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 12px; }
+  .setup .word { font-size: 15px; margin-top: 4px; }
+  .setup .pills { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); }
+  .setup .pills button { padding: 7px 4px; font-size: 13px; }
+  #pick-age { --cols: 6; }
+  #pick-monthly, #pick-raise { --cols: 5; }
+  #pick-rate, #pick-view { --cols: 2; }
+  #pick-payout { --cols: 3; }
+  .chart { height: 340px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
@@ -345,23 +380,24 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
 
     <div class="decks">
       <div class="panel deck-actions">
-        <button class="btn btn-primary" id="random" type="button"><span data-icon="Dices"></span>Live a random life</button>
+        <button class="btn btn-primary" id="random" type="button"><span data-icon="Dices"></span><span class="t-long">Live a random life</span><span class="t-short">Random life</span></button>
         <button class="btn" id="clear" type="button">Clear</button>
       </div>
-      <div class="panel deck take">
-        <div class="deck-title"><h3><span class="badge" aria-hidden="true"></span>Life takes</h3></div>
-        <p class="deck-sub">One-off costs. Before 65, click one on the chart to pay by pausing your investing instead of selling.</p>
-        <div class="cards" id="deck-cost"></div>
-      </div>
-      <div class="panel deck take">
-        <div class="deck-title"><h3><span class="badge" aria-hidden="true"></span>Life pauses</h3></div>
-        <p class="deck-sub">Months with nothing invested. Pull the handle to make them longer.</p>
-        <div class="cards" id="deck-pause"></div>
-      </div>
-      <div class="panel deck give">
-        <div class="deck-title"><h3><span class="badge" aria-hidden="true"></span>Life gives</h3></div>
-        <p class="deck-sub">Things that push the number up.</p>
-        <div class="cards" id="deck-give"></div>
+      <div class="panel hand">
+        <section class="deck take">
+          <h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life takes</h3>
+          <p class="deck-sub">Before 65, click one on the chart to pay by pausing your investing instead of selling.</p>
+          <div class="cards" id="deck-cost"></div>
+        </section>
+        <section class="deck take">
+          <h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life pauses</h3>
+          <p class="deck-sub">Months with nothing invested. Pull the handle to change how long.</p>
+          <div class="cards" id="deck-pause"></div>
+        </section>
+        <section class="deck give">
+          <h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life gives</h3>
+          <div class="cards" id="deck-give"></div>
+        </section>
       </div>
     </div>
   </section>
@@ -396,7 +432,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   const CARDS = {
     car:        { deck: 'take', group: 'cost', icon: 'Car', name: 'New car', type: 'lump', amount: -20000 },
     wedding:    { deck: 'take', group: 'cost', icon: 'Gem', name: 'Wedding', type: 'lump', amount: -15000 },
-    house:      { deck: 'take', group: 'cost', icon: 'House', name: 'Home down payment', type: 'lump', amount: -40000 },
+    house:      { deck: 'take', group: 'cost', icon: 'House', name: 'Down payment', type: 'lump', amount: -40000 },
     kitchen:    { deck: 'take', group: 'cost', icon: 'CookingPot', name: 'New kitchen', type: 'lump', amount: -15000 },
     roof:       { deck: 'take', group: 'cost', icon: 'Hammer', name: 'Roof repair', type: 'lump', amount: -12000 },
     vet:        { deck: 'take', group: 'cost', icon: 'PawPrint', name: 'Vet surgery', type: 'lump', amount: -3000 },
@@ -477,7 +513,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   function effectText(c) {
     if (c.type === 'lump') return (c.amount < 0 ? '−' : '+') + '€' + plain.format(Math.abs(c.amount));
     if (c.type === 'monthly') return `+€${c.amount} a month`;
-    return `No investing ${fmtLen(c.months)}`;
+    return `Pause ${fmtLen(c.months)}`;
   }
 
   // ---------- simulation ----------
@@ -611,7 +647,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       const fx = document.createElement('span'); fx.className = 'fx'; fx.textContent = effectText(c);
       b.append(em, nm, fx);
       b.addEventListener('pointerdown', (e) => startCardDrag(key, e));
-      b.addEventListener('click', (e) => { if (e.detail === 0) addToken(key, randomAge(key)); });
+      b.addEventListener('click', (e) => { if (e.detail === 0) addToken(key, randomAge(key), false, true); });
       document.getElementById('deck-' + c.group).append(b);
     }
   }
@@ -744,7 +780,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     const [from, to] = cfg.range();
     const { P, R } = cfg.series();
     const W = el.clientWidth, H = el.clientHeight, narrow = W < 560;
-    const m = { top: 92, right: narrow ? 92 : 124, bottom: cfg.mult ? 58 : 36, left: narrow ? 48 : 58 };
+    const m = { top: 92, right: narrow ? 18 : 124, bottom: cfg.mult ? 58 : 36, left: narrow ? 46 : 58 };
     svg.attr('width', W).attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
     const x = d3.scaleLinear([from, to], [m.left, W - m.right]);
     let top = Math.max(d3.max(P), d3.max(R), 1) * 1.08;
@@ -827,12 +863,19 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       const mid = (items[0].y + items[1].y) / 2, up = items[1].v <= items[0].v;
       items[0].ly = mid + (up ? -22 : 22); items[1].ly = mid + (up ? 22 : -22);
     }
-    for (const it of items) {
-      const ly = Math.min(B.box.y0 - 6, Math.max(m.top - 10, it.ly ?? it.y));
+    const inside = B.box.W < 560;
+    items.forEach((it, i) => {
+      let ly = Math.min(B.box.y0 - 6, Math.max(m.top - 10, it.ly ?? it.y));
+      if (inside) {
+        const other = items[1 - i];
+        const above = !other || it.y < other.y || (it.y === other.y && i === 0);
+        ly = above ? Math.max(m.top + 2, it.y - 26) : Math.min(B.box.y0 - 22, it.y + 22);
+      }
+      const lx = inside ? xe - 10 : xe + 12, anchor = inside ? 'end' : 'start';
       G.ends.append('circle').attr('class', it.cls === 'promise' ? 'end-dot-promise' : 'end-dot-reality').attr('cx', xe).attr('cy', it.y).attr('r', it.cls === 'promise' ? 5 : 6);
-      G.ends.append('text').attr('class', 'end-name halo').attr('x', xe + 12).attr('y', ly - 6).text(it.name);
-      G.ends.append('text').attr('class', 'end-value halo ' + it.cls).attr('x', xe + 12).attr('y', ly + 13).text(money(it.v));
-    }
+      G.ends.append('text').attr('class', 'end-name halo').attr('x', lx).attr('y', ly - 6).attr('text-anchor', anchor).text(it.name);
+      G.ends.append('text').attr('class', 'end-value halo ' + it.cls).attr('x', lx).attr('y', ly + 13).attr('text-anchor', anchor).text(money(it.v));
+    });
   }
   function saveEnds(B, P, R, x, y, m) {
     const n = P.length - 1;
@@ -1110,7 +1153,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     }
     return pick();
   }
-  function addToken(key, age, quiet) {
+  function addToken(key, age, quiet, reveal) {
     if (CARDS[key].type === 'pause' && age >= RETIRE) {
       toast(CARDS[key].icon, "After 65 you're not investing anymore, so there's nothing to pause.");
       return null;
@@ -1120,6 +1163,10 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     S.tokens.push(t);
     closePop(); save(); render(false);
     if (!quiet) toastFor(t.id);
+    if (reveal) {
+      const B = boardFor(t.age), r = B.el.getBoundingClientRect();
+      if (r.bottom < 80 || r.top > innerHeight - 160) B.el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+    }
     return t;
   }
   function removeToken(id) {
@@ -1172,7 +1219,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     const up = (e) => {
       const hit = moved ? dropTarget(e.clientX, e.clientY) : null;
       clear();
-      if (!moved) addToken(key, randomAge(key));
+      if (!moved) addToken(key, randomAge(key), false, true);
       else if (hit) addToken(key, hit.age);
     };
     window.addEventListener('pointermove', move);
