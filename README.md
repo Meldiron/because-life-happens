@@ -2,7 +2,7 @@
 
 The brochure promises a fortune at 65. Life has other plans.
 
-A simple, game-like playground: pick your age, monthly amount, where you invest and how much you raise it each year, then drag life onto your timeline. Cards that take (a car, a wedding, a medical bill), cards that pause your investing (sick leave, a lost job, a sabbatical, a baby) and cards that give (an inheritance, a promotion, quitting smoking) show exactly what each one does to your money.
+A simple, game-like playground: pick your age, what you've already invested, your monthly amount, where you invest and how much you raise it each year, then drag life onto your timeline. Cards that take (a car, a wedding, a medical bill), cards that pause your investing (sick leave, a lost job, a sabbatical, a baby) and cards that give (an inheritance, a promotion, quitting smoking) show exactly what each one does to your money.
 
 Live: https://investment-playground-v2.appwrite.network · Full version: [v1](https://github.com/Meldiron/investment-playground-v1)
 
