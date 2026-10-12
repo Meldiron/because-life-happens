@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Because Life Happens</title>
+<style>
+@font-face { font-family: "Aeonik Pro"; src: url("https://cdn.appwrite.io/assets/AeonikPro-Regular-BkHrzXoz.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Aeonik Pro"; src: url("https://cdn.appwrite.io/assets/AeonikPro-Medium-BqHv4pGd.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Aeonik Pro"; src: url("https://cdn.appwrite.io/assets/AeonikPro-Bold-CS4_Sbsv.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("https://cdn.appwrite.io/assets/inter-latin-400-normal-YtgfLPRn.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("https://cdn.appwrite.io/assets/inter-latin-600-normal-BvOeHRLc.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+
+/* Layout: hero + setup sentence, scoreboard, then board (chart | decks), then the life log */
+:root {
+  color-scheme: dark;
+  --bg: #19191c;
+  --surface: #1d1d21;
+  --raised: #242428;
+  --line: #2d2d31;
+  --hair: #262629;
+  --fg: #fafafa;
+  --fg-2: #d4d4d8;
+  --muted: #9f9fa9;
+  --faint: #6c6c75;
+  --pink: #fd366e;
+  --pink-soft: rgba(253, 54, 110, 0.14);
+  --take: #f99c00;
+  --take-soft: rgba(249, 156, 0, 0.14);
+  --give: #00bb7f;
+  --give-soft: rgba(0, 187, 127, 0.14);
+  --promise: #fafafa;
+  --font-display: "Aeonik Pro", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --radius: 16px;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--bg); }
+body {
+  margin: 0; color: var(--fg); font: 15px/1.55 var(--font-body);
+  background:
+    radial-gradient(70% 45% at 50% -12%, rgba(253, 54, 110, 0.20), transparent 70%),
+    radial-gradient(40% 30% at 100% 0%, rgba(253, 54, 110, 0.06), transparent 70%),
+    var(--bg);
+  background-repeat: no-repeat;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; }
+
+nav { border-bottom: 1px solid var(--hair); }
+nav .wrap { height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 500; font-size: 17px; letter-spacing: -0.01em; }
+.brand-mark { width: 26px; height: 26px; border-radius: 8px; background: var(--pink); display: grid; place-items: center; box-shadow: 0 0 24px rgba(253, 54, 110, 0.45); }
+.brand-mark::after { content: ""; width: 10px; height: 10px; border-radius: 50%; border: 2.5px solid #fff; border-right-color: transparent; transform: rotate(-45deg); }
+
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--raised); font-weight: 600; font-size: 14px; white-space: nowrap; transition: background 0.15s, border-color 0.15s, transform 0.1s; }
+.btn:hover { border-color: #3d3d42; background: #2a2a2f; }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--pink); border-color: var(--pink); color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 20px rgba(253, 54, 110, 0.25); }
+.btn-primary:hover { background: #ff4a7d; border-color: #ff4a7d; }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--muted); }
+.btn-ghost:hover { color: var(--fg); background: var(--raised); border-color: var(--line); }
+
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0; display: inline-flex; align-items: center; gap: 8px; }
+.eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--pink); }
+
+.hero { padding-block: 40px 24px; display: grid; gap: 16px; }
+h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(36px, 5vw, 60px); line-height: 0.98; letter-spacing: -0.035em; margin: 0; text-wrap: balance; }
+h1 .pink { color: var(--pink); }
+.lede { margin: 0; max-width: 62ch; color: var(--muted); font-size: 17px; text-wrap: pretty; }
+.lede strong { color: var(--fg); font-weight: 600; }
+
+.setup { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--hair); border-radius: var(--radius); font-family: var(--font-display); font-size: 18px; }
+.setup .word { color: var(--muted); }
+.pills { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 3px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+.pills button { border: 0; background: transparent; border-radius: 7px; padding: 5px 11px; font-family: var(--font-body); font-size: 14px; font-weight: 600; color: var(--muted); transition: background 0.15s, color 0.15s; }
+.pills button:hover { color: var(--fg); }
+.pills button[aria-pressed="true"] { background: var(--pink); color: #fff; }
+
+.score { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.tile { background: var(--surface); border: 1px solid var(--hair); border-radius: var(--radius); padding: 16px 18px; display: grid; gap: 4px; min-width: 0; }
+.tile .label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13.5px; }
+.tile .value { font-family: var(--font-display); font-weight: 500; font-size: clamp(30px, 3.6vw, 44px); letter-spacing: -0.03em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.tile .sub { color: var(--faint); font-size: 13.5px; }
+.tile .sub strong { color: var(--fg-2); font-weight: 600; }
+.tile.reality { border-color: rgba(253, 54, 110, 0.35); background: linear-gradient(180deg, rgba(253, 54, 110, 0.08), transparent 80%), var(--surface); }
+.tile.reality .value { color: var(--pink); }
+.tile.bill .value.take { color: var(--take); }
+.tile.bill .value.give { color: var(--give); }
+.key { width: 18px; height: 0; border-top: 2px dashed var(--promise); opacity: 0.7; }
+.key.solid { border-top: 3px solid var(--pink); opacity: 1; }
+.key.sq { width: 12px; height: 12px; border: 0; border-radius: 3px; background: var(--take); opacity: 1; }
+
+.board { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 16px; margin-top: 16px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--hair); border-radius: var(--radius); padding: 18px; min-width: 0; position: relative; }
+.panel-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.panel h2 { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 22px; letter-spacing: -0.02em; }
+.panel .hint { margin: 2px 0 0; color: var(--muted); font-size: 13.5px; }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+.switch { display: inline-flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--muted); border: 0; background: transparent; padding: 0 4px; height: 38px; }
+.switch .track { width: 34px; height: 20px; border-radius: 999px; background: var(--line); position: relative; transition: background 0.15s; }
+.switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform 0.15s; }
+.switch[aria-checked="true"] { color: var(--fg); }
+.switch[aria-checked="true"] .track { background: var(--pink); }
+.switch[aria-checked="true"] .track::after { transform: translateX(14px); }
+
+#chart { position: relative; height: 420px; margin-top: 10px; border-radius: 12px; transition: box-shadow 0.15s, background 0.15s; touch-action: pan-y; }
+#chart.is-drop { background: rgba(253, 54, 110, 0.04); box-shadow: inset 0 0 0 1.5px rgba(253, 54, 110, 0.5); }
+#chart svg { display: block; overflow: visible; }
+.empty-hint { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); text-align: center; color: var(--muted); font-size: 14px; pointer-events: none; background: rgba(25, 25, 28, 0.85); border: 1px dashed var(--line); padding: 12px 16px; border-radius: 12px; }
+.empty-hint strong { color: var(--fg); display: block; font-family: var(--font-display); font-weight: 500; font-size: 17px; }
+
+.grid-line { stroke: var(--hair); }
+.base-line { stroke: var(--line); }
+.tick { fill: var(--faint); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.mult { fill: var(--muted); font: 11px var(--font-mono); }
+.mult-label { fill: var(--faint); font: 11px var(--font-mono); }
+.l-promise { fill: none; stroke: var(--promise); stroke-opacity: 0.6; stroke-width: 2; stroke-dasharray: 6 6; stroke-linecap: round; }
+.l-reality { fill: none; stroke: var(--pink); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; filter: drop-shadow(0 0 8px rgba(253, 54, 110, 0.45)); }
+.a-reality { fill: url(#pinkFade); }
+.a-loss { fill: var(--take); fill-opacity: 0.16; }
+.a-gain { fill: var(--give); fill-opacity: 0.18; }
+.end-dot-promise { fill: var(--bg); stroke: var(--promise); stroke-width: 2; }
+.end-dot-reality { fill: var(--pink); stroke: var(--bg); stroke-width: 2.5; }
+.end-name { fill: var(--muted); font-size: 12px; }
+.end-value { font-family: var(--font-display); font-weight: 500; font-size: 18px; letter-spacing: -0.02em; }
+.end-value.promise { fill: var(--fg); }
+.end-value.reality { fill: var(--pink); }
+.halo { paint-order: stroke; stroke: var(--surface); stroke-width: 5px; stroke-linejoin: round; }
+.hover-line { stroke: var(--muted); stroke-opacity: 0.5; pointer-events: none; }
+.drop-line { stroke: var(--pink); stroke-width: 1.5; stroke-dasharray: 4 4; pointer-events: none; }
+.drop-label { fill: var(--pink); font-weight: 600; font-size: 13px; }
+
+.tok { cursor: grab; outline: none; }
+.tok.dragging { cursor: grabbing; }
+.tok-hit { fill: transparent; }
+.tok-ring { fill: var(--raised); stroke-width: 2.5; transition: stroke-width 0.12s; }
+.tok.take .tok-ring { stroke: var(--take); }
+.tok.give .tok-ring { stroke: var(--give); }
+.tok:hover .tok-ring, .tok:focus-visible .tok-ring, .tok.selected .tok-ring { stroke-width: 4; }
+.tok-emoji { font-size: 18px; text-anchor: middle; pointer-events: none; user-select: none; }
+.tok-inner { transform-box: fill-box; transform-origin: center; }
+.tok.pop .tok-inner { animation: pop 0.45s cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes pop { from { transform: scale(0.2) translateY(-30px); opacity: 0; } to { transform: none; opacity: 1; } }
+.tok-bar { fill: var(--take-soft); stroke: var(--take); stroke-width: 1.5; }
+.tok-link { stroke: var(--take); stroke-width: 1.5; stroke-dasharray: 2 3; pointer-events: none; }
+.tok-knob { cursor: ew-resize; outline: none; }
+.tok-knob .knob-hit { fill: transparent; }
+.tok-knob .knob { fill: var(--raised); stroke: var(--take); stroke-width: 2; transition: stroke-width 0.12s; }
+.tok-knob:hover .knob, .tok-knob.dragging .knob { stroke-width: 3; }
+.tok-knob line { stroke: var(--take); stroke-width: 1.5; pointer-events: none; }
+.pause-band { fill: var(--take); fill-opacity: 0.08; }
+.tok-guide { stroke-width: 1; stroke-dasharray: 2 4; pointer-events: none; }
+.tok-guide.take { stroke: var(--take); }
+.tok-guide.give { stroke: var(--give); }
+.tok-dot { stroke: var(--surface); stroke-width: 2; pointer-events: none; }
+.tok-dot.take { fill: var(--take); }
+.tok-dot.give { fill: var(--give); }
+
+.tip { position: absolute; z-index: 10; pointer-events: none; background: var(--raised); border: 1px solid var(--line); border-radius: 10px; padding: 8px 11px; font-size: 13px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45); white-space: nowrap; }
+.tip b { font-weight: 600; }
+.tip .row { display: flex; justify-content: space-between; gap: 16px; }
+.tip .p { color: var(--muted); }
+.tip .r { color: var(--pink); }
+
+.pop-card { position: absolute; z-index: 12; width: 270px; background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); display: grid; gap: 8px; font-size: 13.5px; }
+.pop-card .t { font-family: var(--font-display); font-size: 16px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.pop-card p { margin: 0; color: var(--fg-2); }
+.pop-card .actions { display: flex; gap: 8px; }
+.pop-card .btn { height: 32px; font-size: 13px; }
+
+.decks { display: grid; gap: 16px; }
+.deck-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.deck-title h3 { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 18px; display: flex; align-items: center; gap: 9px; }
+.deck-title .badge { width: 10px; height: 10px; border-radius: 50%; }
+.deck.take .badge { background: var(--take); box-shadow: 0 0 12px var(--take); }
+.deck.give .badge { background: var(--give); box-shadow: 0 0 12px var(--give); }
+.deck-sub { margin: 2px 0 12px; color: var(--muted); font-size: 13px; }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.card {
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 10px; align-items: center; text-align: left;
+  padding: 10px 11px; border-radius: 12px; border: 1px solid var(--line); background: var(--raised);
+  cursor: grab; touch-action: none; user-select: none; transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35); }
+.deck.take .card:hover { border-color: rgba(249, 156, 0, 0.6); }
+.deck.give .card:hover { border-color: rgba(0, 187, 127, 0.6); }
+.card .em { grid-row: span 2; font-size: 24px; line-height: 1; }
+.card .nm { font-weight: 600; font-size: 13.5px; line-height: 1.25; }
+.card .fx { font-family: var(--font-mono); font-size: 11.5px; line-height: 1.3; }
+.deck.take .fx { color: var(--take); }
+.deck.give .fx { color: var(--give); }
+
+.ghost { position: fixed; left: 0; top: 0; z-index: 50; pointer-events: none; display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; background: var(--raised); border: 1.5px solid var(--pink); font-weight: 600; font-size: 13.5px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5); }
+.ghost .em { font-size: 20px; }
+
+.log { margin-top: 16px; }
+.log-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+.log-item { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 12px; background: var(--bg); border: 1px solid var(--hair); }
+.log-item .em { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-size: 20px; }
+.log-item.take .em { background: var(--take-soft); }
+.log-item.give .em { background: var(--give-soft); }
+.log-item p { margin: 0; color: var(--fg-2); font-size: 14px; text-wrap: pretty; }
+.log-item p b { color: var(--fg); font-weight: 600; }
+.log-item .note { color: var(--faint); font-size: 12.5px; }
+.impact { font-family: var(--font-display); font-weight: 500; font-size: 18px; letter-spacing: -0.01em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.impact.take { color: var(--take); }
+.impact.give { color: var(--give); }
+.impact.zero { color: var(--muted); }
+.lesson { margin-top: 14px; display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 12px; background: var(--pink-soft); border: 1px solid rgba(253, 54, 110, 0.3); color: var(--fg-2); font-size: 14px; }
+.lesson .big { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--pink); letter-spacing: -0.02em; white-space: nowrap; }
+.log-empty { margin-top: 14px; padding: 18px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); text-align: center; }
+
+.toast { position: fixed; left: 50%; bottom: 24px; z-index: 60; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; max-width: calc(100vw - 32px); background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 11px 16px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); font-size: 14.5px; transition: opacity 0.25s, transform 0.25s; display: flex; gap: 10px; align-items: center; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast .em { font-size: 20px; }
+
+footer { margin-top: 40px; padding-block: 24px 48px; border-top: 1px solid var(--hair); color: var(--faint); font-size: 13px; }
+footer p { margin: 0 0 6px; max-width: 100ch; }
+
+@media (max-width: 1100px) { .board { grid-template-columns: minmax(0, 1fr); } .decks { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 760px) {
+  .score { grid-template-columns: minmax(0, 1fr); }
+  .decks { grid-template-columns: minmax(0, 1fr); }
+  #chart { height: 360px; }
+  .setup { font-size: 16px; }
+  .hero { padding-block: 32px 20px; }
+  .log-item { grid-template-columns: 36px minmax(0, 1fr); }
+  .log-item .impact { grid-column: 2; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span>Because life happens</div>
+    <button class="btn btn-ghost" id="reset" type="button">Start over</button>
+  </div>
+</nav>
+
+<main class="wrap">
+  <section class="hero">
+    <p class="eyebrow"><span class="dot"></span>Investing reality check</p>
+    <h1>The brochure promises a fortune at 65.<br><span class="pink">Life has other plans.</span></h1>
+    <p class="lede">Every investing talk shows the same smooth line. Real life comes with weddings, broken cars and the odd inheritance. <strong>Drag life onto your timeline</strong> and see what's actually waiting for you at 65.</p>
+    <div class="setup" role="group" aria-label="Your plan">
+      <span class="word">I'm</span>
+      <span class="pills" id="pick-age" role="group" aria-label="Your age"></span>
+      <span class="word">and invest</span>
+      <span class="pills" id="pick-monthly" role="group" aria-label="Monthly investment"></span>
+      <span class="word">a month in</span>
+      <span class="pills" id="pick-rate" role="group" aria-label="Where you invest"></span>
+    </div>
+  </section>
+
+  <section class="score" aria-live="polite">
+    <div class="tile">
+      <div class="label"><span class="key" aria-hidden="true"></span>The promise at 65</div>
+      <div class="value" id="v-promise">€0</div>
+      <div class="sub" id="s-promise"></div>
+    </div>
+    <div class="tile reality">
+      <div class="label"><span class="key solid" aria-hidden="true"></span>Your reality at 65</div>
+      <div class="value" id="v-reality">€0</div>
+      <div class="sub" id="s-reality"></div>
+    </div>
+    <div class="tile bill">
+      <div class="label"><span class="key sq" id="bill-key" aria-hidden="true"></span><span id="l-bill">Life's bill</span></div>
+      <div class="value" id="v-bill">€0</div>
+      <div class="sub" id="s-bill"></div>
+    </div>
+  </section>
+
+  <section class="board">
+    <div class="panel" id="board-panel">
+      <div class="panel-head">
+        <div>
+          <h2>Your timeline</h2>
+          <p class="hint">Drop cards on it. Drag icons to move them in time, pull a pause bar's handle to make it longer. Click an icon to remove it.</p>
+        </div>
+        <div class="tools">
+          <button class="switch" id="real" type="button" role="switch" aria-checked="false"><span class="track" aria-hidden="true"></span>Today's money</button>
+          <button class="btn" id="clear" type="button">Clear</button>
+          <button class="btn btn-primary" id="random" type="button">🎲 Live a random life</button>
+        </div>
+      </div>
+      <div id="chart">
+        <div class="empty-hint" id="empty-hint" hidden><strong>Nothing has happened yet.</strong>Drag a card here, or roll a random life.</div>
+      </div>
+      <div class="tip" id="tip" hidden></div>
+      <div class="pop-card" id="pop" hidden></div>
+    </div>
+
+    <div class="decks">
+      <div class="panel deck take">
+        <div class="deck-title"><h3><span class="badge" aria-hidden="true"></span>Life takes</h3></div>
+        <p class="deck-sub">Things you'll need money for. 👶 and 💼 are pauses you can stretch.</p>
+        <div class="cards" id="deck-take"></div>
+      </div>
+      <div class="panel deck give">
+        <div class="deck-title"><h3><span class="badge" aria-hidden="true"></span>Life gives</h3></div>
+        <p class="deck-sub">Things that push the number up.</p>
+        <div class="cards" id="deck-give"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel log">
+    <h2>What happened</h2>
+    <p class="hint">Each event on its own, measured at 65.</p>
+    <div class="lesson" id="lesson"></div>
+    <ul class="log-list" id="log"></ul>
+    <div class="log-empty" id="log-empty" hidden>Nothing happened. Lucky you. Real life rarely looks like this.</div>
+  </section>
+
+  <footer>
+    <p>How it's calculated: you invest every month until 65 and the portfolio grows at a steady yearly rate. Card prices are in today's money and rise 2.5% a year with inflation. Expenses are sold from your investments; if there isn't enough, the rest has to come from somewhere else. A market crash drops everything 30% and recovers over 3 years. Monthly retirement income uses the 4% rule. "Today's money" removes 2.5% yearly inflation.</p>
+    <p>A toy for building intuition, not financial advice.</p>
+  </footer>
+</main>
+
+<div class="ghost" id="ghost" hidden></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+(() => {
+  const RETIRE = 65, INFL = 0.025, STORE = 'because-life-happens-v1';
+  const AGES = [20, 25, 30, 35, 40, 45];
+  const MONTHLY = [100, 200, 300, 500, 1000];
+  const RATES = [[0.01, 'a bank', '1%'], [0.03, 'bonds', '3%'], [0.05, 'a mix', '5%'], [0.07, 'stocks', '7%']];
+
+  const CARDS = {
+    car:     { deck: 'take', emoji: '🚗', name: 'New car', type: 'lump', amount: -20000 },
+    wedding: { deck: 'take', emoji: '💍', name: 'Wedding', type: 'lump', amount: -15000 },
+    house:   { deck: 'take', emoji: '🏠', name: 'Home down payment', type: 'lump', amount: -40000 },
+    kitchen: { deck: 'take', emoji: '🍳', name: 'New kitchen', type: 'lump', amount: -15000 },
+    vet:     { deck: 'take', emoji: '🐕', name: 'Vet surgery', type: 'lump', amount: -3000 },
+    baby:    { deck: 'take', emoji: '👶', name: 'Baby', type: 'pause', months: 12 },
+    job:     { deck: 'take', emoji: '💼', name: 'Lost my job', type: 'pause', months: 6 },
+    crash:   { deck: 'take', emoji: '📉', name: 'Market crash', type: 'crash', drop: 0.3, recover: 3 },
+    inherit: { deck: 'give', emoji: '🎁', name: 'Inheritance', type: 'lump', amount: 30000 },
+    promo:   { deck: 'give', emoji: '📈', name: 'Promotion', type: 'monthly', amount: 200 },
+    bonus:   { deck: 'give', emoji: '💰', name: 'Year-end bonus', type: 'lump', amount: 5000 },
+    hustle:  { deck: 'give', emoji: '🛠️', name: 'Side hustle', type: 'monthly', amount: 150 },
+    smoke:   { deck: 'give', emoji: '🚭', name: 'Quit smoking', type: 'monthly', amount: 120 },
+    refund:  { deck: 'give', emoji: '🧾', name: 'Tax refund', type: 'lump', amount: 2000 },
+  };
+
+  let nextId = 1;
+  const tok = (key, age) => (CARDS[key].type === 'pause' ? { id: nextId++, key, age, months: CARDS[key].months } : { id: nextId++, key, age });
+  const isRange = (t) => CARDS[t.key].type === 'pause';
+  const monthsOf = (t) => t.months || CARDS[t.key].months;
+  const snapM = (a) => Math.round(a * 12) / 12;
+  function fmtAge(a) {
+    const y = Math.floor(a + 1e-9), m = Math.round((a - y) * 12);
+    return m ? `${y}y ${m}m` : `${y}`;
+  }
+  function fmtLen(months) {
+    if (months % 12 === 0) return `${months / 12} yr${months === 12 ? '' : 's'}`;
+    return months > 12 ? `${(months / 12).toFixed(1)} yrs` : `${months} months`;
+  }
+  const EXAMPLE = () => [tok('baby', 33), tok('car', 38), tok('kitchen', 47), tok('inherit', 55)];
+  let S = load();
+
+  function load() {
+    const base = { age: 30, monthly: 300, rate: 0.07, real: false, tokens: EXAMPLE() };
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+      if (saved && Array.isArray(saved.tokens)) {
+        nextId = saved.tokens.reduce((m, t) => Math.max(m, t.id + 1), 1);
+        const tokens = saved.tokens.filter((t) => CARDS[t.key]).map((t) => (CARDS[t.key].type === 'pause' && !t.months ? Object.assign(t, { months: CARDS[t.key].months }) : t));
+        return Object.assign(base, saved, { tokens });
+      }
+    } catch (e) { /* storage unavailable */ }
+    return base;
+  }
+  function save() { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) { /* storage unavailable */ } }
+
+  // ---------- money ----------
+  const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumSignificantDigits: 3 });
+  const plain = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+  function money(v, sign) {
+    const a = Math.abs(v), n = a >= 10000 ? compact.format(a) : plain.format(a);
+    return (v < -0.5 ? '−' : sign && v > 0.5 ? '+' : '') + '€' + n;
+  }
+  function effectText(c) {
+    if (c.type === 'lump') return (c.amount < 0 ? '−' : '+') + '€' + plain.format(Math.abs(c.amount));
+    if (c.type === 'monthly') return `+€${c.amount} a month`;
+    if (c.type === 'pause') return `No investing ${fmtLen(c.months)} ↔`;
+    return `Market −${c.drop * 100}%`;
+  }
+
+  // ---------- simulation ----------
+  function simulate(skipId, ignoreAll) {
+    const M = (RETIRE - S.age) * 12, g = Math.pow(1 + S.rate, 1 / 12);
+    const lump = new Float64Array(M), extra = new Float64Array(M), paused = new Uint8Array(M), crash = new Float64Array(M);
+    if (!ignoreAll) {
+      for (const t of S.tokens) {
+        if (t.id === skipId) continue;
+        const c = CARDS[t.key], m0 = Math.round((t.age - S.age) * 12);
+        if (m0 < 0 || m0 >= M) continue;
+        if (c.type === 'lump') lump[m0] += c.amount * Math.pow(1 + INFL, m0 / 12);
+        else if (c.type === 'monthly') for (let m = m0; m < M; m++) extra[m] += c.amount;
+        else if (c.type === 'pause') for (let m = m0; m < Math.min(M, m0 + monthsOf(t)); m++) paused[m] = 1;
+        else {
+          const d = Math.log(1 - c.drop), n = c.recover * 12;
+          crash[m0] += d;
+          for (let k = 1; k <= n && m0 + k < M; k++) crash[m0 + k] -= d / n;
+        }
+      }
+    }
+    const bal = new Float64Array(M + 1);
+    let b = 0, short = 0, skipped = 0;
+    for (let m = 0; m < M; m++) {
+      if (paused[m]) skipped += S.monthly + extra[m]; else b += S.monthly + extra[m];
+      b += lump[m];
+      if (b < 0) { short -= b; b = 0; }
+      b *= g * Math.exp(crash[m]);
+      bal[m + 1] = b;
+    }
+    return { bal, short, skipped, M };
+  }
+  const deflate = (v, m) => (S.real ? v / Math.pow(1 + INFL, m / 12) : v);
+  const viewArr = (arr) => Array.from(arr, (v, m) => deflate(v, m));
+
+  let model = null;
+  function compute() {
+    const promise = simulate(null, true), reality = simulate(null, false);
+    const M = reality.M;
+    const per = S.tokens.filter((t) => t.age >= S.age && t.age < RETIRE).map((t) => {
+      const without = simulate(t.id, false);
+      return { t, c: CARDS[t.key], impact: deflate(reality.bal[M] - without.bal[M], M), short: reality.short - without.short, skipped: reality.skipped - without.skipped };
+    });
+    model = { promise, reality, M, per, P: viewArr(promise.bal), R: viewArr(reality.bal) };
+  }
+
+  // ---------- setup pills ----------
+  function buildPills(id, options, current, onPick) {
+    const host = document.getElementById(id);
+    host.replaceChildren(...options.map(([value, label, title]) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = label; b.dataset.value = value;
+      if (title) b.title = title;
+      b.addEventListener('click', () => onPick(value));
+      return b;
+    }));
+    syncPills(id, current);
+  }
+  function syncPills(id, current) {
+    document.querySelectorAll(`#${id} button`).forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.value === +current)));
+  }
+  function buildSetup() {
+    buildPills('pick-age', AGES.map((a) => [a, String(a)]), S.age, (v) => { S.age = v; S.tokens = S.tokens.filter((t) => t.age >= v); afterChange(true); });
+    buildPills('pick-monthly', MONTHLY.map((m) => [m, money(m)]), S.monthly, (v) => { S.monthly = v; afterChange(true); });
+    buildPills('pick-rate', RATES.map(([r, where, p]) => [r, `${where} ${p}`, `${p} average yearly return`]), S.rate, (v) => { S.rate = v; afterChange(true); });
+  }
+  function syncSetup() {
+    syncPills('pick-age', S.age); syncPills('pick-monthly', S.monthly); syncPills('pick-rate', S.rate);
+    document.getElementById('real').setAttribute('aria-checked', String(S.real));
+  }
+
+  // ---------- decks ----------
+  function buildDecks() {
+    for (const key in CARDS) {
+      const c = CARDS[key];
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'card'; b.title = 'Drag onto your timeline, or click to drop it at a random age';
+      const em = document.createElement('span'); em.className = 'em'; em.textContent = c.emoji; em.setAttribute('aria-hidden', 'true');
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = c.name;
+      const fx = document.createElement('span'); fx.className = 'fx'; fx.textContent = effectText(c);
+      b.append(em, nm, fx);
+      b.addEventListener('pointerdown', (e) => startCardDrag(key, e));
+      b.addEventListener('click', (e) => { if (e.detail === 0) addToken(key, randomAge()); });
+      document.getElementById('deck-' + c.deck).append(b);
+    }
+  }
+
+  // ---------- scoreboard ----------
+  const shown = { promise: 0, reality: 0, bill: 0 };
+  function animateValue(key, el, target, fmt, instant) {
+    const from = shown[key];
+    shown[key] = target;
+    if (instant || Math.abs(target - from) < 1) { el.textContent = fmt(target); return; }
+    d3.select(el).interrupt().transition().duration(500).ease(d3.easeCubicOut)
+      .tween('text', () => { const i = d3.interpolateNumber(from, target); return (t) => { el.textContent = fmt(i(t)); }; });
+  }
+  function renderScore(instant) {
+    const { P, R, M, per } = model;
+    const p = P[M], r = R[M], diff = r - p;
+    animateValue('promise', document.getElementById('v-promise'), p, (v) => money(v), instant);
+    animateValue('reality', document.getElementById('v-reality'), r, (v) => money(v), instant);
+    animateValue('bill', document.getElementById('v-bill'), diff, (v) => money(v, true), instant);
+    const sp = document.getElementById('s-promise');
+    const invested = S.monthly * M;
+    sp.textContent = `${money(invested)} put in, nothing ever goes wrong`;
+    const sr = document.getElementById('s-reality');
+    sr.replaceChildren('About ', strong(money((r * 0.04) / 12)), ' a month in retirement');
+    const isGain = diff > 0.5;
+    document.getElementById('l-bill').textContent = isGain ? "Life's bonus" : "Life's bill";
+    document.getElementById('bill-key').style.background = isGain ? 'var(--give)' : 'var(--take)';
+    const vb = document.getElementById('v-bill');
+    vb.className = 'value ' + (Math.abs(diff) < 0.5 ? '' : isGain ? 'give' : 'take');
+    const nTake = per.filter((x) => x.c.deck === 'take').length, nGive = per.length - nTake;
+    document.getElementById('s-bill').textContent = per.length ? `${nTake} setback${nTake === 1 ? '' : 's'}, ${nGive} lucky break${nGive === 1 ? '' : 's'}` : 'Your timeline is empty';
+  }
+  function strong(t) { const s = document.createElement('strong'); s.textContent = t; return s; }
+
+  // ---------- chart ----------
+  const chartEl = document.getElementById('chart');
+  const svg = d3.select(chartEl).append('svg');
+  const defs = svg.append('defs');
+  const grad = defs.append('linearGradient').attr('id', 'pinkFade').attr('x1', 0).attr('x2', 0).attr('y1', 0).attr('y2', 1);
+  grad.append('stop').attr('offset', '0%').attr('stop-color', '#fd366e').attr('stop-opacity', 0.28);
+  grad.append('stop').attr('offset', '100%').attr('stop-color', '#fd366e').attr('stop-opacity', 0);
+  const G = {};
+  for (const k of ['grid', 'bands', 'area', 'gap', 'promise', 'reality', 'axis', 'ends', 'guides', 'overlay', 'hover', 'tokens', 'drop']) G[k] = svg.append('g');
+  const realityPath = G.reality.append('path').attr('class', 'l-reality');
+  const areaPath = G.area.append('path').attr('class', 'a-reality');
+  const promisePath = G.promise.append('path').attr('class', 'l-promise');
+  const lossPath = G.gap.append('path').attr('class', 'a-loss');
+  const gainPath = G.gap.append('path').attr('class', 'a-gain');
+  let X = null, Y = null, box = null, dragging = null, frozenY = null, lastAge = null, selectedId = null;
+  const LANES = [24, 62];
+
+  function drawChart(instant) {
+    const { P, R, M } = model;
+    const W = chartEl.clientWidth, H = chartEl.clientHeight, narrow = W < 560;
+    const m = { top: 92, right: narrow ? 92 : 124, bottom: 58, left: narrow ? 44 : 54 };
+    svg.attr('width', W).attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+    const x = d3.scaleLinear([S.age, RETIRE], [m.left, W - m.right]);
+    let top = Math.max(d3.max(P), d3.max(R), 1) * 1.08;
+    if (frozenY) top = Math.max(frozenY, top); else if (dragging) frozenY = top;
+    const y = d3.scaleLinear([0, top], [H - m.bottom, m.top]).nice(4);
+    X = x; Y = y; box = { m, W, H, y0: H - m.bottom };
+    const ageOf = (i) => S.age + i / 12;
+    const sameShape = lastAge === S.age;
+    lastAge = S.age;
+    const t = instant || !sameShape ? null : d3.transition().duration(450).ease(d3.easeCubicOut);
+    const set = (sel, attr, val) => (t ? sel.transition(t).attr(attr, val) : sel.interrupt().attr(attr, val));
+
+    G.grid.selectAll('*').remove();
+    for (const v of y.ticks(4)) {
+      G.grid.append('line').attr('class', 'grid-line').attr('x1', m.left).attr('x2', W - m.right).attr('y1', y(v)).attr('y2', y(v));
+      G.grid.append('text').attr('class', 'tick').attr('x', m.left - 10).attr('y', y(v)).attr('dy', '0.32em').attr('text-anchor', 'end').text(v === 0 ? '€0' : money(v));
+    }
+
+    const line = d3.line().x((v, i) => x(ageOf(i))).y((v) => y(v)).curve(d3.curveMonotoneX);
+    set(promisePath, 'd', line(P));
+    set(realityPath, 'd', line(R));
+    set(areaPath, 'd', d3.area().x((v, i) => x(ageOf(i))).y0(box.y0).y1((v) => y(v)).curve(d3.curveMonotoneX)(R));
+    const lo = Array.from(R, (v, i) => Math.min(v, P[i])), hi = Array.from(R, (v, i) => Math.max(v, P[i]));
+    const gapArea = (edge) => d3.area().x((v, i) => x(ageOf(i))).y0((v, i) => y(P[i])).y1((v, i) => y(edge[i])).curve(d3.curveMonotoneX)(edge);
+    set(lossPath, 'd', gapArea(lo));
+    set(gainPath, 'd', gapArea(hi));
+
+    G.bands.selectAll('*').remove();
+    for (const t of S.tokens) {
+      if (!isRange(t) || t.age < S.age || t.age >= RETIRE) continue;
+      const a1 = Math.min(RETIRE, t.age + monthsOf(t) / 12);
+      G.bands.append('rect').attr('class', 'pause-band').attr('x', x(t.age)).attr('y', m.top - 10).attr('width', Math.max(1, x(a1) - x(t.age))).attr('height', box.y0 - m.top + 10);
+    }
+
+    G.axis.selectAll('*').remove();
+    G.axis.append('line').attr('class', 'base-line').attr('x1', m.left).attr('x2', W - m.right).attr('y1', box.y0).attr('y2', box.y0);
+    const step = narrow ? 10 : 5;
+    const ticks = [];
+    for (let a = Math.ceil(S.age / step) * step; a < RETIRE; a += step) ticks.push(a);
+    if (ticks[0] !== S.age) ticks.unshift(S.age);
+    ticks.push(RETIRE);
+    const clean = ticks.filter((a, i) => i === 0 || x(a) - x(ticks[i - 1]) > 26);
+    for (const a of clean) {
+      G.axis.append('text').attr('class', 'tick').attr('x', x(a)).attr('y', box.y0 + 18).attr('text-anchor', 'middle').text(a);
+      G.axis.append('text').attr('class', 'mult').attr('x', x(a)).attr('y', box.y0 + 38).attr('text-anchor', 'middle').text('×' + Math.pow(1 + S.rate, RETIRE - a).toFixed(1));
+    }
+    G.axis.append('text').attr('class', 'mult-label').attr('x', m.left - 10).attr('y', box.y0 + 18).attr('text-anchor', 'end').text('age');
+    G.axis.append('text').attr('class', 'mult-label').attr('x', m.left - 10).attr('y', box.y0 + 38).attr('text-anchor', 'end').text('€1 →');
+
+    G.ends.selectAll('*').remove();
+    const xe = x(RETIRE), yp = y(P[M]), yr = y(R[M]);
+    let lp = yp, lr = yr;
+    if (Math.abs(lp - lr) < 44) { const mid = (lp + lr) / 2, up = R[M] <= P[M]; lp = mid + (up ? -22 : 22); lr = mid + (up ? 22 : -22); }
+    lp = Math.max(m.top - 10, lp); lr = Math.min(box.y0 - 6, Math.max(m.top - 10, lr));
+    G.ends.append('circle').attr('class', 'end-dot-promise').attr('cx', xe).attr('cy', yp).attr('r', 5);
+    G.ends.append('circle').attr('class', 'end-dot-reality').attr('cx', xe).attr('cy', yr).attr('r', 6);
+    const label = (yy, name, value, cls) => {
+      G.ends.append('text').attr('class', 'end-name halo').attr('x', xe + 12).attr('y', yy - 6).text(name);
+      G.ends.append('text').attr('class', 'end-value halo ' + cls).attr('x', xe + 12).attr('y', yy + 13).text(money(value));
+    };
+    label(lp, 'The promise', P[M], 'promise');
+    label(lr, 'Reality', R[M], 'reality');
+
+    G.overlay.selectAll('*').remove();
+    G.overlay.append('rect').attr('fill', 'transparent').attr('x', m.left).attr('y', m.top - 10).attr('width', W - m.left - m.right).attr('height', box.y0 - m.top + 10)
+      .on('pointermove', onHover).on('pointerleave', hideHover);
+
+    drawTokens(instant);
+    document.getElementById('empty-hint').hidden = model.per.length > 0;
+  }
+
+  function layoutTokens() {
+    const items = S.tokens.filter((t) => t.age >= S.age && t.age < RETIRE).map((t) => {
+      const c = CARDS[t.key], range = isRange(t), x0 = X(t.age);
+      const w = range ? X(Math.min(RETIRE, t.age + monthsOf(t) / 12)) - x0 : 0;
+      const knob = range ? Math.max(w, 34) : 0;
+      return { t, c, range, x: x0, w, knob, left: x0 - 22, right: x0 + (range ? knob + 12 : 22) };
+    }).sort((a, b) => a.left - b.left);
+    const last = [-1e9, -1e9];
+    for (const it of items) {
+      let lane = last.findIndex((r) => it.left - r >= 4);
+      if (lane < 0) lane = last[0] <= last[1] ? 0 : 1;
+      it.lane = lane; last[lane] = it.right;
+    }
+    return items;
+  }
+
+  function moveTo(t, px, offset) {
+    if (!isRange(t)) return Math.max(S.age, Math.min(RETIRE - 1, ageAt(px)));
+    const cx = Math.max(box.m.left, Math.min(box.W - box.m.right, px - offset));
+    return Math.max(S.age, Math.min(RETIRE - monthsOf(t) / 12, snapM(X.invert(cx))));
+  }
+  function tipFor(t) {
+    const c = CARDS[t.key];
+    if (!isRange(t)) return `${c.emoji} Age ${fmtAge(t.age)}`;
+    return `${c.emoji} Age ${fmtAge(t.age)} to ${fmtAge(t.age + monthsOf(t) / 12)} · ${fmtLen(monthsOf(t))}`;
+  }
+
+  const drag = d3.drag().container(() => svg.node())
+    .on('start', (event, d) => { dragging = { id: d.t.id, x0: event.x, offset: event.x - X(d.t.age), moved: false }; hideHover(); })
+    .on('drag', function (event, d) {
+      if (!dragging || (!dragging.moved && Math.abs(event.x - dragging.x0) < 4)) return;
+      if (!dragging.moved) { dragging.moved = true; closePop(); d3.select(this).classed('dragging', true); }
+      const t = S.tokens.find((v) => v.id === d.t.id);
+      if (!t) return;
+      const a = moveTo(t, event.x, dragging.offset);
+      if (a !== t.age) { t.age = a; render(true); }
+      showTip(tipFor(t), X(t.age), 110);
+    })
+    .on('end', function (event, d) {
+      const moved = dragging && dragging.moved;
+      dragging = null; frozenY = null;
+      d3.select(this).classed('dragging', false);
+      hideTip();
+      if (moved) { save(); render(false); toastFor(d.t.id); } else openPop(d.t.id);
+    });
+
+  const stretch = d3.drag().container(() => svg.node())
+    .on('start', function (event, d) { dragging = { id: d.t.id, moved: true }; closePop(); hideHover(); d3.select(this).classed('dragging', true); })
+    .on('drag', (event, d) => {
+      const t = S.tokens.find((v) => v.id === d.t.id);
+      if (!t) return;
+      const cx = Math.max(box.m.left, Math.min(box.W - box.m.right, event.x));
+      const maxM = Math.round((RETIRE - t.age) * 12);
+      const months = Math.max(1, Math.min(maxM, Math.round((X.invert(cx) - t.age) * 12)));
+      if (months !== t.months) { t.months = months; render(true); }
+      showTip(tipFor(t), X(t.age + t.months / 12), 110);
+    })
+    .on('end', function (event, d) {
+      dragging = null; frozenY = null;
+      d3.select(this).classed('dragging', false);
+      hideTip(); save(); render(false); toastFor(d.t.id);
+    });
+
+  function drawTokens(instant) {
+    const items = layoutTokens();
+    G.guides.selectAll('*').remove();
+    for (const it of items) {
+      const i = Math.round((it.t.age - S.age) * 12), yy = Y(model.R[i]);
+      G.guides.append('line').attr('class', 'tok-guide ' + it.c.deck).attr('x1', it.x).attr('x2', it.x).attr('y1', LANES[it.lane] + 20).attr('y2', yy - 6);
+      G.guides.append('circle').attr('class', 'tok-dot ' + it.c.deck).attr('cx', it.x).attr('cy', yy).attr('r', 5);
+    }
+    const sel = G.tokens.selectAll('g.tok').data(items, (d) => d.t.id).join((enter) => {
+      const g = enter.append('g').attr('tabindex', 0).attr('role', 'button');
+      const inner = g.append('g').attr('class', 'tok-inner');
+      g.each(function (d) {
+        if (!d.range) return;
+        const el = d3.select(this).select('.tok-inner');
+        el.append('rect').attr('class', 'tok-bar').attr('y', -7).attr('height', 14).attr('rx', 7);
+        el.append('line').attr('class', 'tok-link').attr('y1', 0).attr('y2', 0);
+        const k = el.append('g').attr('class', 'tok-knob').attr('aria-hidden', 'true');
+        k.append('circle').attr('class', 'knob-hit').attr('r', 16);
+        k.append('circle').attr('class', 'knob').attr('r', 9);
+        k.append('line').attr('x1', -2).attr('x2', -2).attr('y1', -4).attr('y2', 4);
+        k.append('line').attr('x1', 2).attr('x2', 2).attr('y1', -4).attr('y2', 4);
+      });
+      inner.append('circle').attr('class', 'tok-hit').attr('r', 24);
+      inner.append('circle').attr('class', 'tok-ring').attr('r', 19);
+      inner.append('text').attr('class', 'tok-emoji').attr('dy', '0.36em');
+      g.on('keydown', onTokenKey)
+        .on('pointerenter', (event, d) => { if (!dragging && selectedId !== d.t.id) showTip(`${d.c.name} · ${tipFor(d.t).slice(d.c.emoji.length + 1)}`, d.x, LANES[d.lane] + 60); })
+        .on('pointerleave', () => { if (!dragging) hideTip(); });
+      return g;
+    })
+      .call(drag)
+      .attr('class', (d) => `tok ${d.c.deck}${d.t.id === selectedId ? ' selected' : ''}${d.t.fresh ? ' pop' : ''}`)
+      .attr('data-id', (d) => d.t.id)
+      .attr('aria-label', (d) => d.range
+        ? `${d.c.name}, no investing from age ${fmtAge(d.t.age)} for ${fmtLen(monthsOf(d.t))}. Arrow keys move it, up and down change the length, Delete removes it.`
+        : `${d.c.name} at age ${d.t.age}. Arrow keys move it, Delete removes it.`)
+      .attr('transform', (d) => `translate(${d.x},${LANES[d.lane]})`);
+    sel.select('.tok-emoji').text((d) => d.c.emoji);
+    sel.filter((d) => d.range).each(function (d) {
+      const el = d3.select(this);
+      el.select('.tok-bar').attr('x', 0).attr('width', Math.max(2, d.w));
+      el.select('.tok-link').attr('x1', d.w).attr('x2', d.knob - 9).style('display', d.knob - d.w > 10 ? null : 'none');
+      el.select('.tok-knob').attr('transform', `translate(${d.knob},0)`).call(stretch);
+    });
+    for (const t of S.tokens) if (t.fresh) setTimeout(() => { delete t.fresh; }, 500);
+  }
+
+  function ageAt(px) {
+    const cx = Math.max(box.m.left, Math.min(box.W - box.m.right, px));
+    return Math.max(S.age, Math.min(RETIRE - 1, Math.round(X.invert(cx))));
+  }
+
+  function onTokenKey(event, d) {
+    const t = S.tokens.find((v) => v.id === d.t.id);
+    if (!t) return;
+    if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); removeToken(t.id); return; }
+    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openPop(t.id); return; }
+    if (isRange(t) && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+      event.preventDefault();
+      t.months = Math.max(1, Math.min(Math.round((RETIRE - t.age) * 12), monthsOf(t) + (event.key === 'ArrowUp' ? 1 : -1)));
+      save(); render(true);
+      const node = svg.node().querySelector(`g.tok[data-id="${t.id}"]`);
+      if (node) node.focus();
+      return;
+    }
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      const step = isRange(t) && !event.shiftKey ? 1 / 12 : 1;
+      const maxAge = isRange(t) ? RETIRE - monthsOf(t) / 12 : RETIRE - 1;
+      t.age = Math.max(S.age, Math.min(maxAge, snapM(t.age + (event.key === 'ArrowLeft' ? -step : step))));
+      save(); render(true);
+      const node = svg.node().querySelector(`g.tok[data-id="${t.id}"]`);
+      if (node) node.focus();
+    }
+  }
+
+  // ---------- hover ----------
+  const tip = document.getElementById('tip');
+  const hoverLine = G.hover.append('line').attr('class', 'hover-line').style('display', 'none');
+  function showTip(html, px, py) {
+    tip.innerHTML = html;
+    tip.hidden = false;
+    const W = chartEl.clientWidth, w = tip.offsetWidth;
+    tip.style.left = Math.max(8, Math.min(W - w + 10, px - w / 2 + 18)) + 'px';
+    tip.style.top = (py + chartEl.offsetTop) + 'px';
+  }
+  function hideTip() { tip.hidden = true; }
+  function onHover(event) {
+    if (dragging) return;
+    const [px] = d3.pointer(event, svg.node());
+    const a = Math.max(S.age, Math.min(RETIRE, X.invert(px)));
+    const i = Math.round((a - S.age) * 12), ax = X(S.age + i / 12);
+    hoverLine.style('display', null).attr('x1', ax).attr('x2', ax).attr('y1', box.m.top - 10).attr('y2', box.y0);
+    tip.replaceChildren();
+    const head = document.createElement('div'); head.innerHTML = `<b>Age ${Math.floor(S.age + i / 12)}</b>`;
+    const row = (cls, label, v) => { const r = document.createElement('div'); r.className = 'row'; const l = document.createElement('span'); l.className = cls; l.textContent = label; const val = document.createElement('b'); val.textContent = money(v); r.append(l, val); return r; };
+    tip.append(head, row('p', 'Promise', model.P[i]), row('r', 'Reality', model.R[i]));
+    tip.hidden = false;
+    const W = chartEl.clientWidth, w = tip.offsetWidth;
+    let left = ax + 14;
+    if (left + w > W) left = ax - w - 14;
+    tip.style.left = left + 'px';
+    tip.style.top = (chartEl.offsetTop + Y(model.R[i]) - 60) + 'px';
+  }
+  function hideHover() { hoverLine.style('display', 'none'); hideTip(); }
+
+  // ---------- popover ----------
+  const pop = document.getElementById('pop');
+  function openPop(id) {
+    const it = model.per.find((p) => p.t.id === id);
+    if (!it) return;
+    selectedId = id;
+    hideTip();
+    const title = document.createElement('div'); title.className = 't'; title.textContent = `${it.c.emoji} ${it.c.name} at ${fmtAge(it.t.age)}`;
+    const p = document.createElement('p'); p.textContent = story(it);
+    const actions = document.createElement('div'); actions.className = 'actions';
+    const rm = document.createElement('button'); rm.className = 'btn btn-primary'; rm.type = 'button'; rm.textContent = 'Remove';
+    rm.addEventListener('click', () => removeToken(id));
+    const keep = document.createElement('button'); keep.className = 'btn'; keep.type = 'button'; keep.textContent = 'Keep';
+    keep.addEventListener('click', closePop);
+    actions.append(rm, keep);
+    pop.replaceChildren(title, p, actions);
+    pop.hidden = false;
+    const W = chartEl.clientWidth, x = X(it.t.age);
+    const lane = layoutTokens().find((v) => v.t.id === id)?.lane || 0;
+    pop.style.left = Math.max(8, Math.min(W - 270 + 10, x - 30)) + 'px';
+    pop.style.top = (chartEl.offsetTop + LANES[lane] + 30) + 'px';
+    drawTokens(true);
+    rm.focus();
+  }
+  function closePop() {
+    if (selectedId === null) return;
+    selectedId = null; pop.hidden = true;
+    if (X) drawTokens(true);
+  }
+  document.addEventListener('pointerdown', (e) => {
+    if (selectedId !== null && !pop.contains(e.target) && !e.target.closest('g.tok')) closePop();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePop(); });
+
+  // ---------- adding / removing ----------
+  function randomAge(taken = S.tokens.map((t) => t.age)) {
+    for (let tries = 0; tries < 40; tries++) {
+      const a = S.age + 1 + Math.floor(Math.random() * (RETIRE - S.age - 2));
+      if (taken.every((t) => Math.abs(t - a) >= 3)) return a;
+    }
+    return S.age + 1 + Math.floor(Math.random() * (RETIRE - S.age - 2));
+  }
+  function addToken(key, age, quiet) {
+    const t = tok(key, age);
+    t.fresh = true;
+    S.tokens.push(t);
+    closePop(); save(); render(false);
+    if (!quiet) toastFor(t.id);
+    return t;
+  }
+  function removeToken(id) {
+    S.tokens = S.tokens.filter((t) => t.id !== id);
+    closePop(); save(); render(false);
+  }
+
+  const ghost = document.getElementById('ghost');
+  const dropLine = G.drop.append('line').attr('class', 'drop-line').style('display', 'none');
+  const dropText = G.drop.append('text').attr('class', 'drop-label halo').attr('text-anchor', 'middle').style('display', 'none');
+  function dropAge(cx, cy) {
+    const r = chartEl.getBoundingClientRect();
+    if (cx < r.left - 20 || cx > r.right + 20 || cy < r.top - 40 || cy > r.bottom + 20) return null;
+    return ageAt(cx - r.left);
+  }
+  function startCardDrag(key, e0) {
+    if (e0.button > 0) return;
+    e0.preventDefault();
+    const c = CARDS[key];
+    let moved = false;
+    ghost.innerHTML = '';
+    const em = document.createElement('span'); em.className = 'em'; em.textContent = c.emoji;
+    ghost.append(em, c.name);
+    const clear = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', clear);
+      ghost.hidden = true; chartEl.classList.remove('is-drop');
+      dropLine.style('display', 'none'); dropText.style('display', 'none');
+    };
+    const move = (e) => {
+      if (!moved && Math.hypot(e.clientX - e0.clientX, e.clientY - e0.clientY) > 5) { moved = true; ghost.hidden = false; closePop(); }
+      if (!moved) return;
+      ghost.style.transform = `translate(${e.clientX + 14}px, ${e.clientY - 44}px)`;
+      const a = dropAge(e.clientX, e.clientY);
+      chartEl.classList.toggle('is-drop', a !== null);
+      if (a === null) { dropLine.style('display', 'none'); dropText.style('display', 'none'); return; }
+      dropLine.style('display', null).attr('x1', X(a)).attr('x2', X(a)).attr('y1', 6).attr('y2', box.y0);
+      dropText.style('display', null).attr('x', X(a)).attr('y', box.y0 - 10).text(`Age ${a}`);
+    };
+    const up = (e) => {
+      const a = moved ? dropAge(e.clientX, e.clientY) : randomAge();
+      clear();
+      if (a !== null) addToken(key, a);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', clear);
+  }
+
+  // ---------- stories ----------
+  function story(it) {
+    const { c, t, impact, short, skipped } = it;
+    const m0 = Math.round((t.age - S.age) * 12), M = model.M;
+    const then = deflate(Math.abs(c.amount || 0) * Math.pow(1 + INFL, m0 / 12), m0);
+    const imp = money(Math.abs(impact));
+    let s;
+    if (c.type === 'lump' && c.amount < 0) s = `It cost ${money(then)} at ${t.age}. Left invested, that money would have been ${imp} by 65.`;
+    else if (c.type === 'lump') s = `${money(then)} landed at ${t.age}. Invested, it grows into ${imp} by 65.`;
+    else if (c.type === 'pause') s = `${fmtLen(monthsOf(t))} without investing, from ${fmtAge(t.age)} to ${fmtAge(Math.min(RETIRE, t.age + monthsOf(t) / 12))} (${money(deflate(skipped, m0))} skipped). That gap costs ${imp} at 65.`;
+    else if (c.type === 'monthly') s = `${money(c.amount)} more every month from ${t.age} adds up to ${imp} by 65.`;
+    else s = impact >= 0
+      ? `Markets fell 30% at ${t.age} and recovered in 3 years. You kept buying cheap, so it actually helped: +${imp}.`
+      : `Markets fell 30% at ${t.age}${RETIRE - t.age < 3 ? ' with no time left to recover' : ''}. By 65 it cost you ${imp}.`;
+    if (short > 1) s += ` Your investments couldn't cover all of it: ${money(deflate(short, M))} had to come from somewhere else.`;
+    return s;
+  }
+
+  const toastEl = document.getElementById('toast');
+  let toastTimer = null;
+  function toast(emoji, text) {
+    const em = document.createElement('span'); em.className = 'em'; em.textContent = emoji;
+    const tx = document.createElement('span'); tx.textContent = text;
+    toastEl.replaceChildren(em, tx);
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3400);
+  }
+  function toastFor(id) {
+    const it = model.per.find((p) => p.t.id === id);
+    if (!it) return;
+    const v = it.impact;
+    const what = it.c.type === 'pause' ? `${it.c.name}, ${fmtLen(monthsOf(it.t))} without investing` : `${it.c.name} at ${it.t.age}`;
+    toast(it.c.emoji, `${what}: ${Math.abs(v) < 1 ? 'no change' : money(v, true)} at 65`);
+  }
+
+  // ---------- log ----------
+  function renderLog() {
+    const list = document.getElementById('log');
+    const items = [...model.per].sort((a, b) => a.t.age - b.t.age);
+    document.getElementById('log-empty').hidden = items.length > 0;
+    list.replaceChildren(...items.map((it) => {
+      const li = document.createElement('li'); li.className = 'log-item ' + it.c.deck;
+      const em = document.createElement('span'); em.className = 'em'; em.textContent = it.c.emoji; em.setAttribute('aria-hidden', 'true');
+      const p = document.createElement('p');
+      const b = document.createElement('b'); b.textContent = `${it.c.name} at ${fmtAge(it.t.age)}. `;
+      p.append(b, story(it));
+      const imp = document.createElement('span');
+      imp.className = 'impact ' + (Math.abs(it.impact) < 1 ? 'zero' : it.impact < 0 ? 'take' : 'give');
+      imp.textContent = Math.abs(it.impact) < 1 ? 'no change' : money(it.impact, true);
+      li.append(em, p, imp);
+      return li;
+    }));
+    const mult = Math.pow(1 + S.rate, RETIRE - S.age);
+    const lesson = document.getElementById('lesson');
+    const big = document.createElement('span'); big.className = 'big'; big.textContent = `€1 → €${mult.toFixed(1)}`;
+    const txt = document.createElement('span');
+    txt.textContent = `At ${(S.rate * 100).toFixed(0)}% a year, every euro you spend at ${S.age} is ${mult.toFixed(1)} euros missing at 65, before inflation. Every euro life gives you early grows just as much. The row under the chart shows this multiplier for each age.`;
+    lesson.replaceChildren(big, txt);
+  }
+
+  // ---------- main ----------
+  let raf = null, pendingInstant = true;
+  function render(instant) {
+    compute();
+    renderScore(instant);
+    drawChart(instant);
+    renderLog();
+  }
+  function afterChange(animate) { syncSetup(); closePop(); save(); render(!animate); }
+
+  document.getElementById('real').addEventListener('click', () => { S.real = !S.real; afterChange(true); });
+  document.getElementById('clear').addEventListener('click', () => { S.tokens = []; afterChange(true); });
+  document.getElementById('reset').addEventListener('click', () => {
+    nextId = 1;
+    S = { age: 30, monthly: 300, rate: 0.07, real: false, tokens: EXAMPLE() };
+    afterChange(true);
+  });
+  document.getElementById('random').addEventListener('click', () => {
+    const shuffle = (arr) => arr.map((v) => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map((v) => v[1]);
+    const takes = shuffle(Object.keys(CARDS).filter((k) => CARDS[k].deck === 'take')).slice(0, 4);
+    const gives = shuffle(Object.keys(CARDS).filter((k) => CARDS[k].deck === 'give')).slice(0, 2);
+    const picks = shuffle([...takes, ...gives]);
+    S.tokens = [];
+    closePop(); render(false);
+    const taken = [];
+    picks.forEach((key, i) => setTimeout(() => {
+      const a = randomAge(taken);
+      taken.push(a);
+      addToken(key, a, true);
+      if (i === picks.length - 1) {
+        const diff = model.R[model.M] - model.P[model.M];
+        toast('🎲', diff < 0 ? `This life cost you ${money(-diff)} by 65.` : `Lucky! This life added ${money(diff)} by 65.`);
+      }
+    }, 220 * i));
+  });
+
+  buildSetup();
+  buildDecks();
+  syncSetup();
+  render(true);
+  new ResizeObserver(() => { if (raf) cancelAnimationFrame(raf); raf = requestAnimationFrame(() => render(true)); }).observe(chartEl);
+})();
+</script>
+</body>
+</html>
