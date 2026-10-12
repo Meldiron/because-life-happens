@@ -120,9 +120,8 @@ h1 .pink { color: var(--pink); }
 .chart.is-nodrop { background: rgba(251, 44, 54, 0.04); box-shadow: inset 0 0 0 1.5px rgba(251, 44, 54, 0.45); }
 .drop-label.no { fill: var(--debt); }
 .boards { display: grid; gap: 16px; min-width: 0; }
-.deck-actions { display: flex; gap: 8px; padding: 12px; grid-column: 1 / -1; }
-.deck-actions .btn-primary { flex: 1; justify-content: center; }
-.t-short { display: none; }
+.hand-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -4px 0 -2px; }
+.btn-small { height: 28px; padding: 0 9px; font-size: 12.5px; gap: 6px; color: var(--muted); }
 .decks { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; overscroll-behavior: contain; border-radius: var(--radius); }
 .setup.compact { margin-top: 14px; padding: 10px 12px; font-size: 16px; background: var(--bg); }
 .payout-hint { margin-top: 8px !important; }
@@ -291,7 +290,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   main.wrap { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
 
   .dock {
-    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: end;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end;
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
     padding: 6px 8px calc(8px + env(safe-area-inset-bottom, 0px));
     background: rgba(22, 22, 25, 0.92); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
@@ -310,13 +309,6 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   .dock-btn.take[aria-expanded="true"]::before { background: var(--take); }
   .dock-btn.give[aria-expanded="true"]::before { background: var(--give); }
   .dock-btn:active .ic { transform: scale(0.9); }
-  .dock-main .fab {
-    width: 54px; height: 54px; margin-top: -28px; border-radius: 50%; display: grid; place-items: center;
-    background: var(--pink); border: 4px solid var(--bg); box-shadow: 0 8px 24px rgba(253, 54, 110, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    transition: transform 0.12s;
-  }
-  .dock-main .fab .ic { color: #fff; width: 24px; height: 24px; }
-  .dock-main:active .fab { transform: scale(0.94); }
 
   .scrim { display: block; position: fixed; inset: 0; z-index: 34; background: rgba(0, 0, 0, 0.5); opacity: 0; pointer-events: none; transition: opacity 0.2s; }
   body.sheet-open .scrim { opacity: 1; pointer-events: auto; }
@@ -334,11 +326,11 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   body.dragging-card .scrim { opacity: 0; pointer-events: none; }
   .sheet-handle { display: block; position: sticky; top: 0; z-index: 1; padding: 10px 0 14px; margin: 0 -16px; background: var(--surface); cursor: grab; touch-action: none; }
   .sheet-handle::before { content: ""; display: block; width: 40px; height: 5px; margin: 0 auto; border-radius: 3px; background: #3d3d42; }
-  .decks .deck-actions { display: none; }
+  .decks .hand-top .btn-small { display: none; }
   .decks .hand { padding: 0; border: 0; background: none; gap: 12px; }
   .decks .deck { display: none; }
   .decks[data-open="cost"] .deck[data-group="cost"], .decks[data-open="pause"] .deck[data-group="pause"], .decks[data-open="give"] .deck[data-group="give"] { display: block; }
-  .hand-hint { order: 2; justify-content: center; margin: 4px 0 0; }
+  .hand-top { order: 2; justify-content: center; margin: 4px 0 0; }
   .deck-label { font-size: 13px; }
   .custom-chip { height: 32px; padding: 0 12px 0 9px; font-size: 13px; }
   .decks .card { min-height: 54px; }
@@ -383,7 +375,6 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     <div class="nav-actions">
       <button class="btn btn-ghost" id="import" type="button" title="Load a scenario from a PDF you exported" aria-label="Import PDF"><span data-icon="FileUp"></span><span class="nav-label">Import PDF</span></button>
       <button class="btn" id="export" type="button" title="Download this scenario as a PDF" aria-label="Export PDF"><span data-icon="FileDown"></span><span class="nav-label">Export PDF</span></button>
-      <button class="btn btn-ghost" id="reset" type="button" title="Start over with the example life" aria-label="Start over"><span data-icon="RotateCcw"></span><span class="nav-label">Start over</span></button>
     </div>
     <input type="file" id="import-file" accept="application/pdf,.pdf,application/json,.json" hidden>
   </div>
@@ -436,7 +427,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
           </div>
         </div>
         <div class="chart" id="chart">
-          <div class="empty-hint" id="empty-hint" hidden><strong>Nothing has happened yet.</strong>Drag a card here, or roll a random life.</div>
+          <div class="empty-hint" id="empty-hint" hidden><strong>Nothing has happened yet.</strong>Drag a card from the right onto this chart.</div>
         </div>
         <div class="tip" id="tip" hidden></div>
         <div class="pop-card" id="pop" hidden></div>
@@ -464,12 +455,11 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
 
     <div class="decks" id="decks" aria-label="Life cards">
       <div class="sheet-handle" id="sheet-handle" aria-hidden="true"></div>
-      <div class="panel deck-actions">
-        <button class="btn btn-primary" id="random" type="button"><span data-icon="Dices"></span><span class="t-long">Live a random life</span><span class="t-short">Random life</span></button>
-        <button class="btn" id="clear" type="button">Clear</button>
-      </div>
       <div class="panel hand">
-        <p class="hand-hint"><span data-icon="HandGrab"></span>Drag a card onto either chart</p>
+        <div class="hand-top">
+          <p class="hand-hint"><span data-icon="HandGrab"></span>Drag a card onto either chart</p>
+          <button class="btn btn-ghost btn-small" id="clear" type="button" title="Remove every event from both charts"><span data-icon="Eraser" data-size="14"></span>Clear all</button>
+        </div>
         <section class="deck take" data-group="cost">
           <div class="deck-head"><h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life takes</h3><span class="custom-slot" id="custom-cost"></span></div>
           <div class="cards" id="deck-cost"></div>
@@ -503,7 +493,6 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
 <nav class="dock" aria-label="Life cards">
   <button type="button" class="dock-btn take" data-sheet="cost" aria-expanded="false" aria-controls="decks"><span data-icon="CircleMinus" data-size="22"></span>Takes</button>
   <button type="button" class="dock-btn take" data-sheet="pause" aria-expanded="false" aria-controls="decks"><span data-icon="CirclePause" data-size="22"></span>Pauses</button>
-  <button type="button" class="dock-btn dock-main" data-action="random"><span class="fab"><span data-icon="Dices" data-size="24"></span></span>Random</button>
   <button type="button" class="dock-btn give" data-sheet="give" aria-expanded="false" aria-controls="decks"><span data-icon="CirclePlus" data-size="22"></span>Gives</button>
   <button type="button" class="dock-btn" data-action="clear"><span data-icon="Eraser" data-size="22"></span>Clear</button>
 </nav>
@@ -1517,30 +1506,6 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
 
   function clearAll() { S.tokens = []; afterChange(true); }
   document.getElementById('clear').addEventListener('click', clearAll);
-  document.getElementById('reset').addEventListener('click', () => {
-    nextId = 1;
-    S = DEFAULTS();
-    afterChange(true);
-  });
-  function randomLife() {
-    const shuffle = (arr) => arr.map((v) => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map((v) => v[1]);
-    const takes = shuffle(Object.keys(CARDS).filter((k) => CARDS[k].deck === 'take' && !CARDS[k].custom)).slice(0, 4);
-    const gives = shuffle(Object.keys(CARDS).filter((k) => CARDS[k].deck === 'give' && !CARDS[k].custom)).slice(0, 2);
-    const picks = shuffle([...takes, ...gives]);
-    S.tokens = [];
-    closePop(); render(false);
-    const taken = [];
-    picks.forEach((key, i) => setTimeout(() => {
-      const a = randomAge(key, taken);
-      taken.push(a);
-      addToken(key, a, true);
-      if (i === picks.length - 1) {
-        const diff = model.R[model.M] - model.P[model.M], b = model.rr.broke;
-        toast('Dices', `This life: ${money(diff, true)} at 65, ${b < 0 ? `money lasts past ${END}` : `broke at ${brokeAt(b)}`}.`);
-      }
-    }, 220 * i));
-  }
-  document.getElementById('random').addEventListener('click', randomLife);
 
   const decksEl = document.getElementById('decks');
   function openSheet(group) {
@@ -1555,7 +1520,6 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     document.querySelectorAll('.dock-btn[data-sheet]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
   }
   document.querySelectorAll('.dock-btn[data-sheet]').forEach((b) => b.addEventListener('click', () => openSheet(b.dataset.sheet)));
-  document.querySelector('.dock-btn[data-action="random"]').addEventListener('click', () => { closeSheet(); randomLife(); });
   document.querySelector('.dock-btn[data-action="clear"]').addEventListener('click', () => { closeSheet(); clearAll(); toast('Eraser', 'Timeline cleared.'); });
   document.getElementById('scrim').addEventListener('click', closeSheet);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
