@@ -7,7 +7,7 @@ A simple, game-like playground: pick your age, monthly amount, where you invest 
 Live: https://investment-playground-v2.appwrite.network · Full version: [v1](https://github.com/Meldiron/investment-playground-v1)
 
 - **Saving until 65** – drag a card onto the timeline, or click it to drop it at a random age. Drag icons to move them; pull a pause bar's handle to make it longer. Click an icon to change its price, or to pay for a cost by pausing your investing instead of selling.
-- **Retirement** – pick how much you take out each month (in today's money, rising with inflation) and see the age you go broke, compared with the promise. Life events can land here too.
+- **Retirement** – pick how much you take out each month (at today's prices, rising with inflation) and see the age you go broke, compared with the promise. Life events can land here too.
 - **Live a random life** deals four setbacks and two lucky breaks.
 - Balances can go negative: debt grows at 8% a year.
 

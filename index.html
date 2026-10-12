@@ -284,7 +284,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       <span class="pills" id="pick-rate" role="group" aria-label="Where you invest"></span>
       <span class="word">raising it</span>
       <span class="pills" id="pick-raise" role="group" aria-label="Yearly raise of the monthly amount"></span>
-      <span class="word">each year, shown in</span>
+      <span class="word">each year, showing</span>
       <span class="pills" id="pick-view" role="group" aria-label="Show money as"></span>
     </div>
   </section>
@@ -370,7 +370,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     <ul class="facts">
       <li>Inflation <b>2.5%</b> a year</li>
       <li>Debt interest <b>8%</b> a year</li>
-      <li>Card prices in <b>today's money</b></li>
+      <li>Card prices are what things <b>cost today</b></li>
       <li>Retirement guide: <b>4% rule</b></li>
       <li>Timeline ends at <b>100</b></li>
     </ul>
@@ -434,7 +434,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   const priceOf = (t) => t.price ?? Math.abs(CARDS[t.key].amount || 0);
   const amountOf = (t) => (CARDS[t.key].deck === 'take' ? -1 : 1) * priceOf(t);
   const EDIT = {
-    lump: { get: priceOf, set: (t, v) => { t.price = v; }, label: (c) => (c.deck === 'take' ? "Price in today's money" : "Amount in today's money"), pre: '€', min: 0, max: 5000000, step: (v) => (v < 5000 ? 500 : v < 50000 ? 1000 : 5000) },
+    lump: { get: priceOf, set: (t, v) => { t.price = v; }, label: (c) => (c.deck === 'take' ? 'Price today' : 'Amount today'), pre: '€', min: 0, max: 5000000, step: (v) => (v < 5000 ? 500 : v < 50000 ? 1000 : 5000) },
     monthly: { get: priceOf, set: (t, v) => { t.price = v; }, label: (c, retired) => (retired ? 'Extra income every month' : 'Extra invested every month'), pre: '€', min: 0, max: 100000, step: () => 10 },
     pause: { get: monthsOf, set: (t, v) => { t.months = v; }, label: () => 'Months without investing', post: 'months', min: 1, max: (t) => Math.round((RETIRE - t.age) * 12), step: () => 1 },
   };
@@ -593,7 +593,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     buildPills('pick-rate', RATES.map(([r, where, p]) => [r, `${where} ${p}`, `${p} average yearly return`]), S.rate, (v) => { S.rate = v; afterChange(true); });
     buildPills('pick-raise', RAISES.map((r) => [r, `${Math.round(r * 100)}%`, r ? `Invest ${Math.round(r * 100)}% more every year` : 'Same amount every year']), S.raise, (v) => { S.raise = v; afterChange(true); });
     buildPills('pick-payout', PAYOUTS.map((p) => [p, money(p)]), S.payout, (v) => { S.payout = v; afterChange(true); });
-    buildPills('pick-view', [[1, "today's money", 'Remove inflation: what the money would buy today'], [0, 'future money', 'The number on your statement at that age']], S.real ? 1 : 0, (v) => { S.real = !!v; afterChange(true); });
+    buildPills('pick-view', [[1, 'what it buys today', 'Adjusted for 2.5% yearly inflation'], [0, 'the number on paper', 'The amount on your statement at that age, before inflation']], S.real ? 1 : 0, (v) => { S.real = !!v; afterChange(true); });
   }
   function syncSetup() {
     syncPills('pick-age', S.age); syncPills('pick-monthly', S.monthly); syncPills('pick-rate', S.rate); syncPills('pick-raise', S.raise); syncPills('pick-payout', S.payout);
@@ -675,8 +675,8 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     document.getElementById('ret-stats').replaceChildren(...stats);
     const pot = reality.bal[M] / inflAt(M);
     document.getElementById('payout-hint').textContent = pot > 0
-      ? `In today's money, rising with prices. The 4% rule suggests about ${money(Math.round((pot * 0.04) / 12))} a month for your pot.`
-      : "In today's money, rising with prices. Your pot is empty at 65.";
+      ? `At today's prices; it rises with inflation. The 4% rule suggests about ${money(Math.round((pot * 0.04) / 12))} a month for your pot.`
+      : "At today's prices; it rises with inflation. Your pot is empty at 65.";
   }
 
   // ---------- boards ----------
