@@ -30,6 +30,7 @@
   --give: #00bb7f;
   --give-soft: rgba(0, 187, 127, 0.14);
   --promise: #fafafa;
+  --debt: #fb2c36;
   --font-display: "Aeonik Pro", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -117,6 +118,9 @@ h1 .pink { color: var(--pink); }
 
 .grid-line { stroke: var(--hair); }
 .base-line { stroke: var(--line); }
+.zero-line { stroke: var(--muted); stroke-opacity: 0.6; }
+.debt-zone { fill: var(--debt); fill-opacity: 0.07; }
+.debt-label { fill: var(--debt); font: 600 11px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
 .tick { fill: var(--faint); font-size: 11.5px; font-variant-numeric: tabular-nums; }
 .mult { fill: var(--muted); font: 11px var(--font-mono); }
 .mult-label { fill: var(--faint); font: 11px var(--font-mono); }
@@ -320,7 +324,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   </section>
 
   <footer>
-    <p>How it's calculated: you invest every month until 65 and the portfolio grows at a steady yearly rate. Card prices are in today's money and rise 2.5% a year with inflation. Expenses are sold from your investments; if there isn't enough, the rest has to come from somewhere else. A market crash drops everything 30% and recovers over 3 years. Monthly retirement income uses the 4% rule. "Today's money" removes 2.5% yearly inflation.</p>
+    <p>How it's calculated: you invest every month until 65 and the portfolio grows at a steady yearly rate. Card prices are in today's money and rise 2.5% a year with inflation. Expenses are sold from your investments. If there isn't enough, you go into debt: debt grows at 8% loan interest and your monthly contributions pay it off first. A market crash drops everything 30% and recovers over 3 years. Monthly retirement income uses the 4% rule. "Today's money" removes 2.5% yearly inflation.</p>
     <p>A toy for building intuition, not financial advice.</p>
   </footer>
 </main>
@@ -331,7 +335,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 (() => {
-  const RETIRE = 65, INFL = 0.025, STORE = 'because-life-happens-v1';
+  const RETIRE = 65, INFL = 0.025, DEBT = 0.08, STORE = 'because-life-happens-v1';
   const AGES = [20, 25, 30, 35, 40, 45];
   const MONTHLY = [100, 200, 300, 500, 1000];
   const RATES = [[0.01, 'a bank', '1%'], [0.03, 'bonds', '3%'], [0.05, 'a mix', '5%'], [0.07, 'stocks', '7%']];
@@ -399,7 +403,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
 
   // ---------- simulation ----------
   function simulate(skipId, ignoreAll) {
-    const M = (RETIRE - S.age) * 12, g = Math.pow(1 + S.rate, 1 / 12);
+    const M = (RETIRE - S.age) * 12, g = Math.pow(1 + S.rate, 1 / 12), gDebt = Math.pow(1 + DEBT, 1 / 12);
     const lump = new Float64Array(M), extra = new Float64Array(M), paused = new Uint8Array(M), crash = new Float64Array(M);
     if (!ignoreAll) {
       for (const t of S.tokens) {
@@ -417,15 +421,14 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       }
     }
     const bal = new Float64Array(M + 1);
-    let b = 0, short = 0, skipped = 0;
+    let b = 0, skipped = 0;
     for (let m = 0; m < M; m++) {
       if (paused[m]) skipped += S.monthly + extra[m]; else b += S.monthly + extra[m];
       b += lump[m];
-      if (b < 0) { short -= b; b = 0; }
-      b *= g * Math.exp(crash[m]);
+      b *= b < 0 ? gDebt : g * Math.exp(crash[m]);
       bal[m + 1] = b;
     }
-    return { bal, short, skipped, M };
+    return { bal, skipped, M };
   }
   const deflate = (v, m) => (S.real ? v / Math.pow(1 + INFL, m / 12) : v);
   const viewArr = (arr) => Array.from(arr, (v, m) => deflate(v, m));
@@ -436,7 +439,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     const M = reality.M;
     const per = S.tokens.filter((t) => t.age >= S.age && t.age < RETIRE).map((t) => {
       const without = simulate(t.id, false);
-      return { t, c: CARDS[t.key], impact: deflate(reality.bal[M] - without.bal[M], M), short: reality.short - without.short, skipped: reality.skipped - without.skipped };
+      return { t, c: CARDS[t.key], impact: deflate(reality.bal[M] - without.bal[M], M), skipped: reality.skipped - without.skipped };
     });
     model = { promise, reality, M, per, P: viewArr(promise.bal), R: viewArr(reality.bal) };
   }
@@ -501,7 +504,8 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     const invested = S.monthly * M;
     sp.textContent = `${money(invested)} put in, nothing ever goes wrong`;
     const sr = document.getElementById('s-reality');
-    sr.replaceChildren('About ', strong(money((r * 0.04) / 12)), ' a month in retirement');
+    if (r < 0) sr.replaceChildren('You reach 65 ', strong(money(-r)), ' in debt');
+    else sr.replaceChildren('About ', strong(money((r * 0.04) / 12)), ' a month in retirement');
     const isGain = diff > 0.5;
     document.getElementById('l-bill').textContent = isGain ? "Life's bonus" : "Life's bill";
     document.getElementById('bill-key').style.background = isGain ? 'var(--give)' : 'var(--take)';
@@ -536,8 +540,9 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     svg.attr('width', W).attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
     const x = d3.scaleLinear([S.age, RETIRE], [m.left, W - m.right]);
     let top = Math.max(d3.max(P), d3.max(R), 1) * 1.08;
-    if (frozenY) top = Math.max(frozenY, top); else if (dragging) frozenY = top;
-    const y = d3.scaleLinear([0, top], [H - m.bottom, m.top]).nice(4);
+    let bottom = Math.min(0, d3.min(R) * 1.15);
+    if (frozenY) { top = Math.max(frozenY.top, top); bottom = Math.min(frozenY.bottom, bottom); } else if (dragging) frozenY = { top, bottom };
+    const y = d3.scaleLinear([bottom, top], [H - m.bottom, m.top]).nice(4);
     X = x; Y = y; box = { m, W, H, y0: H - m.bottom };
     const ageOf = (i) => S.age + i / 12;
     const sameShape = lastAge === S.age;
@@ -554,7 +559,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     const line = d3.line().x((v, i) => x(ageOf(i))).y((v) => y(v)).curve(d3.curveMonotoneX);
     set(promisePath, 'd', line(P));
     set(realityPath, 'd', line(R));
-    set(areaPath, 'd', d3.area().x((v, i) => x(ageOf(i))).y0(box.y0).y1((v) => y(v)).curve(d3.curveMonotoneX)(R));
+    set(areaPath, 'd', d3.area().x((v, i) => x(ageOf(i))).y0(y(0)).y1((v) => y(Math.max(0, v))).curve(d3.curveMonotoneX)(R));
     const lo = Array.from(R, (v, i) => Math.min(v, P[i])), hi = Array.from(R, (v, i) => Math.max(v, P[i]));
     const gapArea = (edge) => d3.area().x((v, i) => x(ageOf(i))).y0((v, i) => y(P[i])).y1((v, i) => y(edge[i])).curve(d3.curveMonotoneX)(edge);
     set(lossPath, 'd', gapArea(lo));
@@ -569,6 +574,11 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
 
     G.axis.selectAll('*').remove();
     G.axis.append('line').attr('class', 'base-line').attr('x1', m.left).attr('x2', W - m.right).attr('y1', box.y0).attr('y2', box.y0);
+    if (y.domain()[0] < 0) {
+      G.axis.insert('rect', ':first-child').attr('class', 'debt-zone').attr('x', m.left).attr('y', y(0)).attr('width', W - m.left - m.right).attr('height', box.y0 - y(0));
+      G.axis.append('line').attr('class', 'zero-line').attr('x1', m.left).attr('x2', W - m.right).attr('y1', y(0)).attr('y2', y(0));
+      if (box.y0 - y(0) > 18) G.axis.append('text').attr('class', 'debt-label').attr('x', m.left + 8).attr('y', box.y0 - 8).text(`In debt · ${DEBT * 100}% loan interest`);
+    }
     const step = narrow ? 10 : 5;
     const ticks = [];
     for (let a = Math.ceil(S.age / step) * step; a < RETIRE; a += step) ticks.push(a);
@@ -873,7 +883,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
 
   // ---------- stories ----------
   function story(it) {
-    const { c, t, impact, short, skipped } = it;
+    const { c, t, impact, skipped } = it;
     const m0 = Math.round((t.age - S.age) * 12), M = model.M;
     const then = deflate(Math.abs(c.amount || 0) * Math.pow(1 + INFL, m0 / 12), m0);
     const imp = money(Math.abs(impact));
@@ -885,7 +895,8 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     else s = impact >= 0
       ? `Markets fell 30% at ${t.age} and recovered in 3 years. You kept buying cheap, so it actually helped: +${imp}.`
       : `Markets fell 30% at ${t.age}${RETIRE - t.age < 3 ? ' with no time left to recover' : ''}. By 65 it cost you ${imp}.`;
-    if (short > 1) s += ` Your investments couldn't cover all of it: ${money(deflate(short, M))} had to come from somewhere else.`;
+    const after = model.reality.bal[Math.min(M, m0 + 1)];
+    if (c.type === 'lump' && c.amount < 0 && after < 0) s += ` Your investments couldn't cover it, so you went ${money(deflate(-after, m0 + 1))} into debt at ${DEBT * 100}% interest.`;
     return s;
   }
 
