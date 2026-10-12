@@ -279,27 +279,68 @@ h1 .pink { color: var(--pink); }
 footer { margin-top: 40px; padding-block: 24px 48px; border-top: 1px solid var(--hair); color: var(--faint); font-size: 13px; }
 footer p { margin: 0 0 6px; max-width: 100ch; }
 
+.dock, .scrim, .sheet-handle { display: none; }
 @media (max-width: 1100px) {
   .board { grid-template-columns: minmax(0, 1fr); }
-  main.wrap { padding-bottom: 96px; }
-  .decks {
-    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 30; max-height: none; border-radius: 0;
-    display: flex; align-items: stretch; gap: 8px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
-    background: rgba(25, 25, 28, 0.94); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-    border-top: 1px solid var(--line); box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.35);
+  main.wrap { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+
+  .dock {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: end;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    padding: 6px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+    background: rgba(22, 22, 25, 0.92); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    border-top: 1px solid var(--line);
   }
-  .decks::-webkit-scrollbar { display: none; }
-  .decks .panel, .hand, .deck, .cards, .deck-head, .custom-slot { display: contents; }
-  .custom-chip { flex: none; height: auto; border-radius: 10px; padding: 0 14px 0 10px; touch-action: pan-x; }
-  .deck-sub, .hand-hint { display: none; }
-  .deck-label { flex: none; width: 58px; align-self: center; flex-direction: column; align-items: flex-start; gap: 5px; padding-left: 8px; font-size: 10px; line-height: 1.25; letter-spacing: 0.06em; }
-  .deck-actions .btn, .deck-actions .btn-primary { flex: none; height: auto; padding: 0 12px; }
-  .t-long { display: none; }
-  .t-short { display: inline; }
-  .card { flex: none; width: 168px; touch-action: pan-x; }
+  .dock-btn {
+    position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0 2px;
+    border: 0; background: none; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.01em;
+    -webkit-tap-highlight-color: transparent; transition: color 0.15s;
+  }
+  .dock-btn .ic { width: 22px; height: 22px; transition: transform 0.12s; }
+  .dock-btn.take .ic { color: var(--take); }
+  .dock-btn.give .ic { color: var(--give); }
+  .dock-btn[aria-expanded="true"] { color: var(--fg); }
+  .dock-btn[aria-expanded="true"]::before { content: ""; position: absolute; top: -7px; width: 22px; height: 3px; border-radius: 0 0 3px 3px; background: currentColor; }
+  .dock-btn.take[aria-expanded="true"]::before { background: var(--take); }
+  .dock-btn.give[aria-expanded="true"]::before { background: var(--give); }
+  .dock-btn:active .ic { transform: scale(0.9); }
+  .dock-main .fab {
+    width: 54px; height: 54px; margin-top: -28px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--pink); border: 4px solid var(--bg); box-shadow: 0 8px 24px rgba(253, 54, 110, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: transform 0.12s;
+  }
+  .dock-main .fab .ic { color: #fff; width: 24px; height: 24px; }
+  .dock-main:active .fab { transform: scale(0.94); }
+
+  .scrim { display: block; position: fixed; inset: 0; z-index: 34; background: rgba(0, 0, 0, 0.5); opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  body.sheet-open .scrim { opacity: 1; pointer-events: auto; }
+
+  .decks {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 35; display: block;
+    width: 100%; max-width: 720px; margin: 0 auto; max-height: min(74vh, 640px); overflow-y: auto; overscroll-behavior: contain;
+    padding: 0 16px calc(92px + env(safe-area-inset-bottom, 0px)); border-radius: 20px 20px 0 0;
+    background: var(--surface); border: 1px solid var(--line); border-bottom: 0; box-shadow: 0 -24px 60px rgba(0, 0, 0, 0.55);
+    transform: translateY(105%); visibility: hidden;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0.3s;
+  }
+  body.sheet-open .decks { transform: none; visibility: visible; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s; }
+  body.sheet-open.dragging-card .decks { transform: translateY(105%); }
+  body.dragging-card .scrim { opacity: 0; pointer-events: none; }
+  .sheet-handle { display: block; position: sticky; top: 0; z-index: 1; padding: 10px 0 14px; margin: 0 -16px; background: var(--surface); cursor: grab; touch-action: none; }
+  .sheet-handle::before { content: ""; display: block; width: 40px; height: 5px; margin: 0 auto; border-radius: 3px; background: #3d3d42; }
+  .decks .deck-actions { display: none; }
+  .decks .hand { padding: 0; border: 0; background: none; gap: 12px; }
+  .decks .deck { display: none; }
+  .decks[data-open="cost"] .deck[data-group="cost"], .decks[data-open="pause"] .deck[data-group="pause"], .decks[data-open="give"] .deck[data-group="give"] { display: block; }
+  .hand-hint { order: 2; justify-content: center; margin: 4px 0 0; }
+  .deck-label { font-size: 13px; }
+  .custom-chip { height: 32px; padding: 0 12px 0 9px; font-size: 13px; }
+  .decks .card { min-height: 54px; }
   .card:hover { transform: none; box-shadow: none; }
-  .toast { bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+  .toast { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (min-width: 600px) and (max-width: 1100px) {
+  .decks .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
   .score { grid-template-columns: minmax(0, 1fr); }
@@ -407,22 +448,23 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       </div>
     </div>
 
-    <div class="decks">
+    <div class="decks" id="decks" aria-label="Life cards">
+      <div class="sheet-handle" id="sheet-handle" aria-hidden="true"></div>
       <div class="panel deck-actions">
         <button class="btn btn-primary" id="random" type="button"><span data-icon="Dices"></span><span class="t-long">Live a random life</span><span class="t-short">Random life</span></button>
         <button class="btn" id="clear" type="button">Clear</button>
       </div>
       <div class="panel hand">
         <p class="hand-hint"><span data-icon="HandGrab"></span>Drag a card onto either chart</p>
-        <section class="deck take">
+        <section class="deck take" data-group="cost">
           <div class="deck-head"><h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life takes</h3><span class="custom-slot" id="custom-cost"></span></div>
           <div class="cards" id="deck-cost"></div>
         </section>
-        <section class="deck take">
+        <section class="deck take" data-group="pause">
           <div class="deck-head"><h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life pauses</h3><span class="custom-slot" id="custom-pause"></span></div>
           <div class="cards" id="deck-pause"></div>
         </section>
-        <section class="deck give">
+        <section class="deck give" data-group="give">
           <div class="deck-head"><h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life gives</h3><span class="custom-slot" id="custom-give"></span></div>
           <div class="cards" id="deck-give"></div>
         </section>
@@ -442,6 +484,14 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   </footer>
 </main>
 
+<div class="scrim" id="scrim"></div>
+<nav class="dock" aria-label="Life cards">
+  <button type="button" class="dock-btn take" data-sheet="cost" aria-expanded="false" aria-controls="decks"><span data-icon="CircleMinus" data-size="22"></span>Takes</button>
+  <button type="button" class="dock-btn take" data-sheet="pause" aria-expanded="false" aria-controls="decks"><span data-icon="CirclePause" data-size="22"></span>Pauses</button>
+  <button type="button" class="dock-btn dock-main" data-action="random"><span class="fab"><span data-icon="Dices" data-size="24"></span></span>Random</button>
+  <button type="button" class="dock-btn give" data-sheet="give" aria-expanded="false" aria-controls="decks"><span data-icon="CirclePlus" data-size="22"></span>Gives</button>
+  <button type="button" class="dock-btn" data-action="clear"><span data-icon="Eraser" data-size="22"></span>Clear</button>
+</nav>
 <div class="ghost" id="ghost" hidden></div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -1336,9 +1386,21 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       window.removeEventListener('pointerup', up);
       window.removeEventListener('pointercancel', clear);
       ghost.hidden = true; clearDrop();
+      document.body.classList.remove('dragging-card');
     };
     const move = (e) => {
-      if (!moved && Math.hypot(e.clientX - e0.clientX, e.clientY - e0.clientY) > 5) { moved = true; ghost.hidden = false; closePop(); }
+      if (!moved && Math.hypot(e.clientX - e0.clientX, e.clientY - e0.clientY) > 5) {
+        moved = true; ghost.hidden = false; closePop();
+        if (document.body.classList.contains('sheet-open')) {
+          document.body.classList.add('dragging-card');
+          const onScreen = boards.filter((B) => { const r = B.el.getBoundingClientRect(); return r.bottom > 80 && r.top < innerHeight - 120; });
+          if (!onScreen.length) {
+            const mid = innerHeight / 2;
+            const near = c.type === 'pause' ? saveBoard : boards.reduce((a, b) => (Math.abs(a.el.getBoundingClientRect().top - mid) < Math.abs(b.el.getBoundingClientRect().top - mid) ? a : b));
+            near.el.scrollIntoView({ block: 'center' });
+          }
+        }
+      }
       if (!moved) return;
       ghost.style.transform = `translate(${e.clientX + 14}px, ${e.clientY - 44}px)`;
       clearDrop();
@@ -1355,7 +1417,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       const hit = moved ? dropTarget(e.clientX, e.clientY) : null;
       clear();
       if (!moved) nudge(source);
-      else if (hit) addToken(key, hit.age);
+      else if (hit && addToken(key, hit.age)) closeSheet();
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
@@ -1438,13 +1500,14 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   }
   function afterChange(animate) { syncSetup(); closePop(); save(); render(!animate); }
 
-  document.getElementById('clear').addEventListener('click', () => { S.tokens = []; afterChange(true); });
+  function clearAll() { S.tokens = []; afterChange(true); }
+  document.getElementById('clear').addEventListener('click', clearAll);
   document.getElementById('reset').addEventListener('click', () => {
     nextId = 1;
     S = DEFAULTS();
     afterChange(true);
   });
-  document.getElementById('random').addEventListener('click', () => {
+  function randomLife() {
     const shuffle = (arr) => arr.map((v) => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map((v) => v[1]);
     const takes = shuffle(Object.keys(CARDS).filter((k) => CARDS[k].deck === 'take' && !CARDS[k].custom)).slice(0, 4);
     const gives = shuffle(Object.keys(CARDS).filter((k) => CARDS[k].deck === 'give' && !CARDS[k].custom)).slice(0, 2);
@@ -1461,9 +1524,44 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
         toast('Dices', `This life: ${money(diff, true)} at 65, ${b < 0 ? `money lasts past ${END}` : `broke at ${brokeAt(b)}`}.`);
       }
     }, 220 * i));
+  }
+  document.getElementById('random').addEventListener('click', randomLife);
+
+  const decksEl = document.getElementById('decks');
+  function openSheet(group) {
+    if (document.body.classList.contains('sheet-open') && decksEl.dataset.open === group) { closeSheet(); return; }
+    decksEl.dataset.open = group;
+    decksEl.scrollTop = 0;
+    document.body.classList.add('sheet-open');
+    document.querySelectorAll('.dock-btn[data-sheet]').forEach((b) => b.setAttribute('aria-expanded', String(b.dataset.sheet === group)));
+  }
+  function closeSheet() {
+    document.body.classList.remove('sheet-open');
+    document.querySelectorAll('.dock-btn[data-sheet]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+  }
+  document.querySelectorAll('.dock-btn[data-sheet]').forEach((b) => b.addEventListener('click', () => openSheet(b.dataset.sheet)));
+  document.querySelector('.dock-btn[data-action="random"]').addEventListener('click', () => { closeSheet(); randomLife(); });
+  document.querySelector('.dock-btn[data-action="clear"]').addEventListener('click', () => { closeSheet(); clearAll(); toast('Eraser', 'Timeline cleared.'); });
+  document.getElementById('scrim').addEventListener('click', closeSheet);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+  document.getElementById('sheet-handle').addEventListener('pointerdown', (e0) => {
+    const handle = e0.currentTarget;
+    handle.setPointerCapture(e0.pointerId);
+    let dy = 0;
+    const move = (e) => { dy = Math.max(0, e.clientY - e0.clientY); decksEl.style.transform = `translateY(${dy}px)`; decksEl.style.transition = 'none'; };
+    const up = () => {
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', up);
+      handle.removeEventListener('pointercancel', up);
+      decksEl.style.transform = ''; decksEl.style.transition = '';
+      if (dy > 60) closeSheet();
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+    handle.addEventListener('pointercancel', up);
   });
 
-  document.querySelectorAll('[data-icon]').forEach((el) => el.replaceWith(icon(el.dataset.icon, 16)));
+  document.querySelectorAll('[data-icon]').forEach((el) => el.replaceWith(icon(el.dataset.icon, +el.dataset.size || 16)));
   buildSetup();
   buildDecks();
   syncSetup();
