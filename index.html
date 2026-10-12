@@ -269,6 +269,9 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       <span class="pills" id="pick-monthly" role="group" aria-label="Monthly investment"></span>
       <span class="word">a month in</span>
       <span class="pills" id="pick-rate" role="group" aria-label="Where you invest"></span>
+      <span class="word">raising it</span>
+      <span class="pills" id="pick-raise" role="group" aria-label="Yearly raise of the monthly amount"></span>
+      <span class="word">each year</span>
     </div>
   </section>
 
@@ -333,7 +336,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   </section>
 
   <footer>
-    <p>How it's calculated: you invest every month until 65 and the portfolio grows at a steady yearly rate. Card prices are in today's money and rise 2.5% a year with inflation. Expenses are sold from your investments. If there isn't enough, you go into debt: debt grows at 8% loan interest and your monthly contributions pay it off first. A market crash drops everything 30% and recovers over 3 years. Monthly retirement income uses the 4% rule. "Today's money" removes 2.5% yearly inflation.</p>
+    <p>How it's calculated: you invest every month until 65, raising the monthly amount once a year by the percentage you pick, and the portfolio grows at a steady yearly rate. Card prices are in today's money and rise 2.5% a year with inflation. Expenses are sold from your investments. If there isn't enough, you go into debt: debt grows at 8% loan interest and your monthly contributions pay it off first. A market crash drops everything 30% and recovers over 3 years. Monthly retirement income uses the 4% rule. "Today's money" removes 2.5% yearly inflation.</p>
     <p>A toy for building intuition, not financial advice.</p>
   </footer>
 </main>
@@ -348,6 +351,8 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   const AGES = [20, 25, 30, 35, 40, 45];
   const MONTHLY = [100, 200, 300, 500, 1000];
   const RATES = [[0.01, 'a bank', '1%'], [0.03, 'bonds', '3%'], [0.05, 'a mix', '5%'], [0.07, 'stocks', '7%']];
+  const RAISES = [0, 0.01, 0.02, 0.03, 0.05];
+  const DEFAULTS = () => ({ age: 30, monthly: 300, rate: 0.07, raise: 0.02, real: true, tokens: EXAMPLE() });
 
   const CARDS = {
     car:     { deck: 'take', emoji: '🚗', name: 'New car', type: 'lump', amount: -20000 },
@@ -392,13 +397,13 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   let S = load();
 
   function load() {
-    const base = { age: 30, monthly: 300, rate: 0.07, real: false, tokens: EXAMPLE() };
+    const base = DEFAULTS();
     try {
       const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
       if (saved && Array.isArray(saved.tokens)) {
         nextId = saved.tokens.reduce((m, t) => Math.max(m, t.id + 1), 1);
         const tokens = saved.tokens.filter((t) => CARDS[t.key]).map((t) => (CARDS[t.key].type === 'pause' && !t.months ? Object.assign(t, { months: CARDS[t.key].months }) : t));
-        return Object.assign(base, saved, { tokens });
+        return Object.assign(base, saved, { tokens }, saved.raise === undefined ? { raise: 0.02, real: true } : {});
       }
     } catch (e) { /* storage unavailable */ }
     return base;
@@ -439,14 +444,15 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       }
     }
     const bal = new Float64Array(M + 1);
-    let b = 0, skipped = 0;
+    let b = 0, skipped = 0, put = 0;
     for (let m = 0; m < M; m++) {
-      if (paused[m]) skipped += S.monthly + extra[m]; else b += S.monthly + extra[m];
+      const add = S.monthly * Math.pow(1 + S.raise, Math.floor(m / 12)) + extra[m];
+      if (paused[m]) skipped += add; else { b += add; put += deflate(add, m); }
       b += lump[m];
       b *= b < 0 ? gDebt : g * Math.exp(crash[m]);
       bal[m + 1] = b;
     }
-    return { bal, skipped, M };
+    return { bal, skipped, put, M };
   }
   const deflate = (v, m) => (S.real ? v / Math.pow(1 + INFL, m / 12) : v);
   const viewArr = (arr) => Array.from(arr, (v, m) => deflate(v, m));
@@ -481,9 +487,10 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     buildPills('pick-age', AGES.map((a) => [a, String(a)]), S.age, (v) => { S.age = v; S.tokens = S.tokens.filter((t) => t.age >= v); afterChange(true); });
     buildPills('pick-monthly', MONTHLY.map((m) => [m, money(m)]), S.monthly, (v) => { S.monthly = v; afterChange(true); });
     buildPills('pick-rate', RATES.map(([r, where, p]) => [r, `${where} ${p}`, `${p} average yearly return`]), S.rate, (v) => { S.rate = v; afterChange(true); });
+    buildPills('pick-raise', RAISES.map((r) => [r, `${Math.round(r * 100)}%`, r ? `Invest ${Math.round(r * 100)}% more every year` : 'Same amount every year']), S.raise, (v) => { S.raise = v; afterChange(true); });
   }
   function syncSetup() {
-    syncPills('pick-age', S.age); syncPills('pick-monthly', S.monthly); syncPills('pick-rate', S.rate);
+    syncPills('pick-age', S.age); syncPills('pick-monthly', S.monthly); syncPills('pick-rate', S.rate); syncPills('pick-raise', S.raise);
     document.getElementById('real').setAttribute('aria-checked', String(S.real));
   }
 
@@ -519,8 +526,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     animateValue('reality', document.getElementById('v-reality'), r, (v) => money(v), instant);
     animateValue('bill', document.getElementById('v-bill'), diff, (v) => money(v, true), instant);
     const sp = document.getElementById('s-promise');
-    const invested = S.monthly * M;
-    sp.textContent = `${money(invested)} put in, nothing ever goes wrong`;
+    sp.textContent = `${money(model.promise.put)} put in, nothing ever goes wrong`;
     const sr = document.getElementById('s-reality');
     if (r < 0) sr.replaceChildren('You reach 65 ', strong(money(-r)), ' in debt');
     else sr.replaceChildren('About ', strong(money((r * 0.04) / 12)), ' a month in retirement');
@@ -1015,7 +1021,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   document.getElementById('clear').addEventListener('click', () => { S.tokens = []; afterChange(true); });
   document.getElementById('reset').addEventListener('click', () => {
     nextId = 1;
-    S = { age: 30, monthly: 300, rate: 0.07, real: false, tokens: EXAMPLE() };
+    S = DEFAULTS();
     afterChange(true);
   });
   document.getElementById('random').addEventListener('click', () => {
