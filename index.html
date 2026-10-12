@@ -82,6 +82,10 @@ h1 .pink { color: var(--pink); }
 .pills button { border: 0; background: transparent; border-radius: 7px; padding: 5px 11px; font-family: var(--font-body); font-size: 14px; font-weight: 600; color: var(--muted); transition: background 0.15s, color 0.15s; }
 .pills button:hover { color: var(--fg); }
 .pills button[aria-pressed="true"] { background: var(--pink); color: #fff; }
+.pills button.custom:not([aria-pressed="true"]) { color: var(--faint); }
+.custom-edit { display: inline-flex; align-items: center; justify-content: center; gap: 2px; padding: 0 8px; border-radius: 7px; background: var(--raised); box-shadow: inset 0 0 0 1.5px var(--pink); font: 600 14px var(--font-body); color: var(--muted); }
+.custom-edit input { width: 6ch; min-width: 0; border: 0; background: transparent; color: var(--fg); font: inherit; padding: 5px 2px; text-align: right; outline: none; -moz-appearance: textfield; }
+.custom-edit input::-webkit-outer-spin-button, .custom-edit input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 .score { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
 .tile { background: var(--surface); border: 1px solid var(--hair); border-radius: var(--radius); padding: 16px 18px; display: grid; gap: 4px; min-width: 0; }
@@ -217,7 +221,18 @@ h1 .pink { color: var(--pink); }
 .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 .decks { display: grid; gap: 12px; }
-.hand { display: grid; gap: 16px; padding: 14px; }
+.hand { display: grid; gap: 14px; padding: 14px; }
+.deck-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.custom-chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 7px; border-radius: 999px;
+  border: 1px dashed #3d3d42; background: transparent; color: var(--muted); font-size: 12px; font-weight: 600;
+  cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; transition: color 0.15s, border-color 0.15s;
+}
+.custom-chip:hover { color: var(--fg); }
+.deck.take .custom-chip .ic { color: var(--take); }
+.deck.give .custom-chip .ic { color: var(--give); }
+.deck.take .custom-chip:hover { border-color: rgba(249, 156, 0, 0.6); }
+.deck.give .custom-chip:hover { border-color: rgba(0, 187, 127, 0.6); }
 .deck-label { margin: 0; display: flex; align-items: center; gap: 8px; font: 600 12px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-2); }
 .deck-label .badge { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .deck.take .badge { background: var(--take); box-shadow: 0 0 10px var(--take); }
@@ -226,7 +241,7 @@ h1 .pink { color: var(--pink); }
 .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
 .card {
   display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 9px; align-items: center; text-align: left; min-width: 0;
-  padding: 7px 9px; border-radius: 10px; border: 1px solid var(--line); background: var(--raised);
+  padding: 6px 9px; border-radius: 10px; border: 1px solid var(--line); background: var(--raised);
   cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 .card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35); }
@@ -262,7 +277,8 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     border-top: 1px solid var(--line); box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.35);
   }
   .decks::-webkit-scrollbar { display: none; }
-  .decks .panel, .hand, .deck, .cards { display: contents; }
+  .decks .panel, .hand, .deck, .cards, .deck-head, .custom-slot { display: contents; }
+  .custom-chip { flex: none; height: auto; border-radius: 10px; padding: 0 14px 0 10px; touch-action: pan-x; }
   .deck-sub { display: none; }
   .deck-label { flex: none; width: 58px; align-self: center; flex-direction: column; align-items: flex-start; gap: 5px; padding-left: 8px; font-size: 10px; line-height: 1.25; letter-spacing: 0.06em; }
   .deck-actions .btn, .deck-actions .btn-primary { flex: none; height: auto; padding: 0 12px; }
@@ -288,10 +304,10 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   .setup .word { font-size: 15px; margin-top: 4px; }
   .setup .pills { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); }
   .setup .pills button { padding: 7px 4px; font-size: 13px; }
-  #pick-age { --cols: 6; }
-  #pick-monthly, #pick-raise { --cols: 5; }
-  #pick-rate, #pick-view { --cols: 2; }
-  #pick-payout { --cols: 3; }
+  #pick-age, #pick-payout { --cols: 4; }
+  #pick-monthly, #pick-raise, #pick-rate { --cols: 3; }
+  #pick-view { --cols: 2; }
+  .setup .custom-edit { font-size: 13px; padding: 0 6px; }
   .chart { height: 340px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
@@ -385,17 +401,17 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       </div>
       <div class="panel hand">
         <section class="deck take">
-          <h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life takes</h3>
-          <p class="deck-sub">Before 65, click one on the chart to pay by pausing your investing instead of selling.</p>
+          <div class="deck-head"><h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life takes</h3><span class="custom-slot" id="custom-cost"></span></div>
+          <p class="deck-sub">Click one on the chart to pay by pausing instead.</p>
           <div class="cards" id="deck-cost"></div>
         </section>
         <section class="deck take">
-          <h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life pauses</h3>
-          <p class="deck-sub">Months with nothing invested. Pull the handle to change how long.</p>
+          <div class="deck-head"><h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life pauses</h3><span class="custom-slot" id="custom-pause"></span></div>
+          <p class="deck-sub">Pull the handle on the chart to change how long.</p>
           <div class="cards" id="deck-pause"></div>
         </section>
         <section class="deck give">
-          <h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life gives</h3>
+          <div class="deck-head"><h3 class="deck-label"><span class="badge" aria-hidden="true"></span>Life gives</h3><span class="custom-slot" id="custom-give"></span></div>
           <div class="cards" id="deck-give"></div>
         </section>
       </div>
@@ -448,6 +464,9 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     hustle:     { deck: 'give', group: 'give', icon: 'Laptop', name: 'Side hustle', type: 'monthly', amount: 150 },
     smoke:      { deck: 'give', group: 'give', icon: 'CigaretteOff', name: 'Quit smoking', type: 'monthly', amount: 120 },
     refund:     { deck: 'give', group: 'give', icon: 'Receipt', name: 'Tax refund', type: 'lump', amount: 2000 },
+    customCost:  { deck: 'take', group: 'cost', icon: 'CircleMinus', name: 'Custom', type: 'lump', amount: -5000, custom: true },
+    customPause: { deck: 'take', group: 'pause', icon: 'CirclePause', name: 'Custom', type: 'pause', months: 3, custom: true },
+    customGive:  { deck: 'give', group: 'give', icon: 'CirclePlus', name: 'Custom', type: 'lump', amount: 5000, custom: true },
   };
 
   const NS = 'http://www.w3.org/2000/svg';
@@ -609,6 +628,14 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   }
 
   // ---------- setup pills ----------
+  const pct2 = (v) => +(v * 100).toFixed(2);
+  const CUSTOM = {
+    'pick-age': { key: 'age', min: 18, max: 64, step: 1, post: 'yrs', toIn: (v) => v, fromIn: (n) => Math.round(n), label: (v) => String(v) },
+    'pick-monthly': { key: 'monthly', min: 0, max: 50000, step: 10, pre: '€', toIn: (v) => v, fromIn: (n) => Math.round(n), label: (v) => money(v) },
+    'pick-rate': { key: 'rate', min: 0, max: 20, step: 0.1, post: '%', toIn: pct2, fromIn: (n) => n / 100, label: (v) => `custom ${pct2(v)}%` },
+    'pick-raise': { key: 'raise', min: 0, max: 20, step: 0.5, post: '%', toIn: pct2, fromIn: (n) => n / 100, label: (v) => `${pct2(v)}%` },
+    'pick-payout': { key: 'payout', min: 0, max: 50000, step: 50, pre: '€', toIn: (v) => v, fromIn: (n) => Math.round(n), label: (v) => money(v) },
+  };
   function buildPills(id, options, current, onPick) {
     const host = document.getElementById(id);
     host.replaceChildren(...options.map(([value, label, title]) => {
@@ -618,13 +645,61 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       b.addEventListener('click', () => onPick(value));
       return b;
     }));
+    if (CUSTOM[id]) {
+      const cb = document.createElement('button');
+      cb.type = 'button'; cb.className = 'custom'; cb.title = 'Type your own value';
+      cb.addEventListener('click', () => openCustom(id, cb, onPick));
+      host.append(cb);
+    }
     syncPills(id, current);
   }
   function syncPills(id, current) {
-    document.querySelectorAll(`#${id} button`).forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.value === +current)));
+    let matched = false;
+    document.querySelectorAll(`#${id} button:not(.custom)`).forEach((b) => {
+      const on = Math.abs(+b.dataset.value - +current) < 1e-9;
+      matched = matched || on;
+      b.setAttribute('aria-pressed', String(on));
+    });
+    const cb = document.querySelector(`#${id} button.custom`);
+    if (cb) {
+      cb.setAttribute('aria-pressed', String(!matched));
+      cb.textContent = matched ? 'Custom' : CUSTOM[id].label(current);
+    }
+  }
+  function openCustom(id, btn, onPick) {
+    const cfg = CUSTOM[id], before = S[cfg.key];
+    const wrap = document.createElement('span'); wrap.className = 'custom-edit';
+    const affix = (text) => { const a = document.createElement('span'); a.className = 'affix'; a.textContent = text; return a; };
+    const input = document.createElement('input');
+    Object.assign(input, { type: 'number', inputMode: 'decimal', min: cfg.min, max: cfg.max, step: cfg.step, value: cfg.toIn(before) });
+    input.setAttribute('aria-label', btn.closest('.pills').getAttribute('aria-label') + ', custom value');
+    if (cfg.pre) wrap.append(affix(cfg.pre));
+    wrap.append(input);
+    if (cfg.post) wrap.append(affix(cfg.post));
+    btn.replaceWith(wrap);
+    input.focus(); input.select();
+    const apply = () => {
+      const n = parseFloat(input.value);
+      if (!Number.isFinite(n)) return;
+      const v = cfg.fromIn(Math.min(cfg.max, Math.max(cfg.min, n)));
+      if (v !== S[cfg.key]) onPick(v);
+    };
+    let done = false;
+    const close = () => {
+      if (done) return;
+      done = true;
+      wrap.replaceWith(btn);
+      syncPills(id, S[cfg.key]);
+    };
+    input.addEventListener('input', apply);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+      if (e.key === 'Escape') { e.stopPropagation(); input.value = cfg.toIn(before); apply(); input.blur(); }
+    });
+    input.addEventListener('blur', close);
   }
   function buildSetup() {
-    buildPills('pick-age', AGES.map((a) => [a, String(a)]), S.age, (v) => { S.age = v; S.tokens = S.tokens.filter((t) => t.age >= v); afterChange(true); });
+    buildPills('pick-age', AGES.map((a) => [a, String(a)]), S.age, (v) => { S.age = v; afterChange(true); });
     buildPills('pick-monthly', MONTHLY.map((m) => [m, money(m)]), S.monthly, (v) => { S.monthly = v; afterChange(true); });
     buildPills('pick-rate', RATES.map(([r, where, p]) => [r, `${where} ${p}`, `${p} average yearly return`]), S.rate, (v) => { S.rate = v; afterChange(true); });
     buildPills('pick-raise', RAISES.map((r) => [r, `${Math.round(r * 100)}%`, r ? `Invest ${Math.round(r * 100)}% more every year` : 'Same amount every year']), S.raise, (v) => { S.raise = v; afterChange(true); });
@@ -641,14 +716,22 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     for (const key in CARDS) {
       const c = CARDS[key];
       const b = document.createElement('button');
-      b.type = 'button'; b.className = 'card'; b.title = 'Drag onto a chart, or click to drop it at a random age';
-      const em = document.createElement('span'); em.className = 'em'; em.append(icon(c.icon, 18));
-      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = c.name;
-      const fx = document.createElement('span'); fx.className = 'fx'; fx.textContent = effectText(c);
-      b.append(em, nm, fx);
+      b.type = 'button';
+      if (c.custom) {
+        b.className = 'custom-chip';
+        b.title = c.type === 'pause' ? 'Drag onto the chart, then set how long' : 'Drag onto a chart, then type the amount';
+        b.append(icon(c.icon, 15), c.type === 'pause' ? 'Custom pause' : 'Custom');
+        document.getElementById('custom-' + c.group).append(b);
+      } else {
+        b.className = 'card'; b.title = 'Drag onto a chart, or click to drop it at a random age';
+        const em = document.createElement('span'); em.className = 'em'; em.append(icon(c.icon, 18));
+        const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = c.name;
+        const fx = document.createElement('span'); fx.className = 'fx'; fx.textContent = effectText(c);
+        b.append(em, nm, fx);
+        document.getElementById('deck-' + c.group).append(b);
+      }
       b.addEventListener('pointerdown', (e) => startCardDrag(key, e));
       b.addEventListener('click', (e) => { if (e.detail === 0) addToken(key, randomAge(key), false, true); });
-      document.getElementById('deck-' + c.group).append(b);
     }
   }
 
@@ -1053,7 +1136,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   // ---------- popover ----------
   const pop = document.getElementById('pop');
   let popStory = null;
-  function openPop(id) {
+  function openPop(id, focusValue) {
     const it = model.per.find((p) => p.t.id === id);
     if (!it) return;
     selectedId = id;
@@ -1126,7 +1209,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     pop.style.left = Math.max(8, Math.min(W - 308, B.el.offsetLeft + x - 30)) + 'px';
     pop.style.top = (B.el.offsetTop + LANES[lane] + 30) + 'px';
     boards.forEach(drawTokens);
-    if (matchMedia('(pointer: fine)').matches) { input.focus(); input.select(); } else keep.focus();
+    if (focusValue || matchMedia('(pointer: fine)').matches) { input.focus(); input.select(); } else keep.focus();
   }
   function refreshPop() {
     if (selectedId === null || !popStory) return;
@@ -1162,7 +1245,8 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     t.fresh = true;
     S.tokens.push(t);
     closePop(); save(); render(false);
-    if (!quiet) toastFor(t.id);
+    if (CARDS[key].custom && !quiet) setTimeout(() => openPop(t.id, true), reveal ? 350 : 0);
+    else if (!quiet) toastFor(t.id);
     if (reveal) {
       const B = boardFor(t.age), r = B.el.getBoundingClientRect();
       if (r.bottom < 80 || r.top > innerHeight - 160) B.el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
@@ -1311,8 +1395,8 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   });
   document.getElementById('random').addEventListener('click', () => {
     const shuffle = (arr) => arr.map((v) => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map((v) => v[1]);
-    const takes = shuffle(Object.keys(CARDS).filter((k) => CARDS[k].deck === 'take')).slice(0, 4);
-    const gives = shuffle(Object.keys(CARDS).filter((k) => CARDS[k].deck === 'give')).slice(0, 2);
+    const takes = shuffle(Object.keys(CARDS).filter((k) => CARDS[k].deck === 'take' && !CARDS[k].custom)).slice(0, 4);
+    const gives = shuffle(Object.keys(CARDS).filter((k) => CARDS[k].deck === 'give' && !CARDS[k].custom)).slice(0, 2);
     const picks = shuffle([...takes, ...gives]);
     S.tokens = [];
     closePop(); render(false);
