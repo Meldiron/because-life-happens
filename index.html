@@ -116,6 +116,8 @@ h1 .pink { color: var(--pink); }
 .chart.is-nodrop { background: rgba(251, 44, 54, 0.04); box-shadow: inset 0 0 0 1.5px rgba(251, 44, 54, 0.45); }
 .drop-label.no { fill: var(--debt); }
 .boards { display: grid; gap: 16px; min-width: 0; }
+.deck-actions { display: flex; gap: 8px; padding: 12px; grid-column: 1 / -1; }
+.deck-actions .btn-primary { flex: 1; justify-content: center; }
 .decks { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; overscroll-behavior: contain; border-radius: var(--radius); }
 .setup.compact { margin-top: 14px; padding: 10px 12px; font-size: 16px; background: var(--bg); }
 .payout-hint { margin-top: 8px !important; }
@@ -320,8 +322,6 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
           </div>
           <div class="tools">
             <button class="switch" id="real" type="button" role="switch" aria-checked="false"><span class="track" aria-hidden="true"></span>Today's money</button>
-            <button class="btn" id="clear" type="button">Clear</button>
-            <button class="btn btn-primary" id="random" type="button"><span data-icon="Dices"></span>Live a random life</button>
           </div>
         </div>
         <div class="chart" id="chart">
@@ -352,6 +352,10 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     </div>
 
     <div class="decks">
+      <div class="panel deck-actions">
+        <button class="btn btn-primary" id="random" type="button"><span data-icon="Dices"></span>Live a random life</button>
+        <button class="btn" id="clear" type="button">Clear</button>
+      </div>
       <div class="panel deck take">
         <div class="deck-title"><h3><span class="badge" aria-hidden="true"></span>Life takes</h3></div>
         <p class="deck-sub">One-off costs. Before 65, click one on the chart to pay by pausing your investing instead of selling.</p>
