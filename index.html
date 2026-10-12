@@ -179,7 +179,6 @@ h1 .pink { color: var(--pink); }
 .tok-icon { pointer-events: none; }
 .tok.take .tok-icon { color: var(--take); }
 .tok.give .tok-icon { color: var(--give); }
-.tok.paying .tok-ring { stroke-dasharray: 5 3.5; }
 .tok-inner { transform-box: fill-box; transform-origin: center; }
 .tok.pop .tok-inner { animation: pop 0.45s cubic-bezier(.34, 1.56, .64, 1); }
 @keyframes pop { from { transform: scale(0.2) translateY(-30px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -216,10 +215,6 @@ h1 .pink { color: var(--pink); }
 .age-in:hover, .age-in:focus { border-bottom-color: var(--pink); }
 .age-in::-webkit-outer-spin-button, .age-in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .price .lbl { color: var(--muted); font-size: 12.5px; }
-.seg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border-radius: 9px; background: var(--bg); border: 1px solid var(--line); }
-.seg2 button { border: 0; background: transparent; border-radius: 6px; padding: 6px 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
-.seg2 button:hover { color: var(--fg); }
-.seg2 button[aria-pressed="true"] { background: var(--raised); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line); }
 .pop-card p { margin: 0; color: var(--fg-2); }
 .pop-card .actions { display: flex; gap: 8px; }
 .pop-card .btn { height: 32px; font-size: 13px; }
@@ -423,7 +418,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
         <div class="panel-head">
           <div>
             <h2>Saving until 65</h2>
-            <p class="hint">Drag cards onto it. Drag icons to move them in time and pull a pause bar's handle to make it longer. Click an icon to change it, remove it, or pay by pausing your investing instead of selling.</p>
+            <p class="hint">Drag cards onto it. Drag icons to move them in time and pull a pause bar's handle to make it longer. Click an icon to change it or remove it.</p>
           </div>
         </div>
         <div class="chart" id="chart">
@@ -570,8 +565,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   }
   const fmtYears = (y) => (y >= 1 ? `${y.toFixed(1)} years` : `${Math.max(1, Math.round(y * 12))} months`);
   const brokeAt = (m) => Math.floor(RETIRE + m / 12);
-  const EXAMPLE = () => [tok('baby', 33), tok('car', 38), Object.assign(tok('kitchen', 47), { mode: 'pause' }), tok('inherit', 55), tok('medical', 74)];
-  const payingByPause = (t) => CARDS[t.key].type === 'lump' && CARDS[t.key].deck === 'take' && t.mode === 'pause' && t.age < RETIRE;
+  const EXAMPLE = () => [tok('baby', 33), tok('car', 38), tok('kitchen', 47), tok('inherit', 55), tok('medical', 74)];
   let S = load();
 
   function load() {
@@ -606,35 +600,25 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
   const deflate = (v, m) => (S.real ? v / inflAt(m) : v);
   const viewArr = (arr, off) => Array.from(arr, (v, i) => deflate(v, off + i));
 
-  function simulate(skipId, ignoreAll, force) {
+  function simulate(skipId, ignoreAll) {
     const M = (RETIRE - S.age) * 12, g = Math.pow(1 + S.rate, 1 / 12), gDebt = Math.pow(1 + DEBT, 1 / 12);
-    const lump = new Float64Array(M), extra = new Float64Array(M), paused = new Uint8Array(M), oweAdd = new Float64Array(M);
+    const lump = new Float64Array(M), extra = new Float64Array(M), paused = new Uint8Array(M);
     if (!ignoreAll) {
       for (const t of S.tokens) {
         if (t.id === skipId) continue;
         const c = CARDS[t.key], m0 = Math.round((t.age - S.age) * 12);
         if (m0 < 0 || m0 >= M) continue;
-        if (c.type === 'lump') {
-          const mode = force && force.id === t.id ? force.mode : t.mode;
-          if (c.deck === 'take' && mode === 'pause') oweAdd[m0] += priceOf(t) * inflAt(m0);
-          else lump[m0] += amountOf(t) * inflAt(m0);
-        } else if (c.type === 'monthly') for (let m = m0; m < M; m++) extra[m] += priceOf(t);
+        if (c.type === 'lump') lump[m0] += amountOf(t) * inflAt(m0);
+        else if (c.type === 'monthly') for (let m = m0; m < M; m++) extra[m] += priceOf(t);
         else for (let m = m0; m < Math.min(M, m0 + monthsOf(t)); m++) paused[m] = 1;
       }
     }
     const bal = new Float64Array(M + 1), mask = new Uint8Array(M);
-    let b = 0, skipped = 0, put = 0, owe = 0;
+    let b = 0, skipped = 0, put = 0;
     for (let m = 0; m < M; m++) {
       const add = S.monthly * Math.pow(1 + S.raise, Math.floor(m / 12)) + extra[m];
-      owe += oweAdd[m];
-      if (paused[m]) { skipped += add; mask[m] = 1; }
-      else {
-        const use = Math.min(owe, add);
-        owe -= use; skipped += use; b += add - use; put += deflate(add - use, m);
-        if (use > 0) mask[m] = 1;
-      }
+      if (paused[m]) { skipped += add; mask[m] = 1; } else { b += add; put += deflate(add, m); }
       b += lump[m];
-      if (m === M - 1 && owe > 0) { b -= owe; owe = 0; }
       b *= b < 0 ? gDebt : g;
       bal[m + 1] = b;
     }
@@ -674,8 +658,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       const c = CARDS[t.key];
       if (t.age < RETIRE) {
         const w = simulate(t.id, false), wr = retire(w.bal[M], false);
-        const alt = c.type === 'lump' && c.deck === 'take' ? simulate(null, false, { id: t.id, mode: t.mode === 'pause' ? 'sell' : 'pause' }) : null;
-        return { t, c, phase: 'save', impact: deflate(reality.bal[M] - w.bal[M], M), altImpact: alt ? deflate(alt.bal[M] - w.bal[M], M) : null, skipped: reality.skipped - w.skipped, brokeWithout: wr.broke, endDiff: deflate(rr.bal[RM] - wr.bal[RM], M + RM) };
+        return { t, c, phase: 'save', impact: deflate(reality.bal[M] - w.bal[M], M), skipped: reality.skipped - w.skipped, brokeWithout: wr.broke, endDiff: deflate(rr.bal[RM] - wr.bal[RM], M + RM) };
       }
       const wr = retire(reality.bal[M], false, t.id);
       return { t, c, phase: 'retire', impact: 0, skipped: 0, brokeWithout: wr.broke, endDiff: deflate(rr.bal[RM] - wr.bal[RM], M + RM) };
@@ -1118,7 +1101,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       return g;
     })
       .call(B.drag)
-      .attr('class', (d) => `tok ${d.c.deck}${payingByPause(d.t) ? ' paying' : ''}${d.t.id === selectedId ? ' selected' : ''}${d.t.fresh ? ' pop' : ''}`)
+      .attr('class', (d) => `tok ${d.c.deck}${d.t.id === selectedId ? ' selected' : ''}${d.t.fresh ? ' pop' : ''}`)
       .attr('data-id', (d) => d.t.id)
       .attr('aria-label', (d) => d.range
         ? `${d.c.name}, no investing from age ${fmtAge(d.t.age)} for ${fmtLen(monthsOf(d.t))}. Arrow keys move it, up and down change the length, Delete removes it.`
@@ -1265,32 +1248,13 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     stepper.append(plus);
     field.append(label, stepper);
 
-    let payRow = null;
-    if (it.c.type === 'lump' && it.c.deck === 'take' && it.phase === 'save') {
-      payRow = document.createElement('div'); payRow.className = 'price';
-      const pl = document.createElement('span'); pl.className = 'lbl'; pl.textContent = 'How do you pay for it?';
-      const seg = document.createElement('div'); seg.className = 'seg2'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'How do you pay for it');
-      const opts = [['sell', 'Sell investments'], ['pause', 'Pause investing']].map(([mode, text]) => {
-        const b = document.createElement('button'); b.type = 'button'; b.textContent = text;
-        b.setAttribute('aria-pressed', String((t.mode || 'sell') === mode));
-        b.addEventListener('click', () => {
-          t.mode = mode;
-          opts.forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
-          save(); render(false); toastFor(t.id);
-        });
-        return b;
-      });
-      seg.append(...opts);
-      payRow.append(pl, seg);
-    }
-
     const actions = document.createElement('div'); actions.className = 'actions';
     const rm = document.createElement('button'); rm.className = 'btn btn-primary'; rm.type = 'button'; rm.textContent = 'Remove';
     rm.addEventListener('click', () => removeToken(id));
     const keep = document.createElement('button'); keep.className = 'btn'; keep.type = 'button'; keep.textContent = 'Keep';
     keep.addEventListener('click', closePop);
     actions.append(rm, keep);
-    pop.replaceChildren(...[title, popStory, field, payRow, actions].filter(Boolean));
+    pop.replaceChildren(title, popStory, field, actions);
     pop.hidden = false;
     positionPop();
     boards.forEach(drawTokens);
@@ -1442,26 +1406,13 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     }
     const imp = money(Math.abs(impact));
     let s;
-    if (c.type === 'lump' && c.deck === 'take') {
-      if (t.mode === 'pause') {
-        const p = payMonths(t);
-        s = `You paid ${money(then)} at ${t.age} by pausing your investing for about ${fmtLen(p.months)} instead of selling${p.leftover > 1 ? ', and sold the rest at 65' : ''}. That costs ${imp} at 65.`;
-      } else s = `It cost ${money(then)} at ${t.age}. Left invested, that money would have been ${imp} by 65.`;
-      if (it.altImpact !== null) s += ` ${t.mode === 'pause' ? 'Selling investments' : 'Pausing investing'} instead: ${money(it.altImpact, true)}.`;
-    }
+    if (c.type === 'lump' && c.deck === 'take') s = `It cost ${money(then)} at ${t.age}. Left invested, that money would have been ${imp} by 65.`;
     else if (c.type === 'lump') s = `${money(then)} landed at ${t.age}. Invested, it grows into ${imp} by 65.`;
     else if (c.type === 'pause') s = `${fmtLen(monthsOf(t))} without investing, from ${fmtAge(t.age)} to ${fmtAge(Math.min(RETIRE, t.age + monthsOf(t) / 12))} (${money(deflate(skipped, m0))} skipped). That gap costs ${imp} at 65.`;
     else s = `${money(priceOf(t))} more every month from ${t.age} adds up to ${imp} by 65.`;
     const after = model.reality.bal[Math.min(model.M, m0 + 1)];
-    if (c.type === 'lump' && c.deck === 'take' && t.mode !== 'pause' && after < 0) s += ` Your investments couldn't cover it, so you went ${money(deflate(-after, m0 + 1))} into debt at ${DEBT * 100}% interest.`;
+    if (c.type === 'lump' && c.deck === 'take' && after < 0) s += ` Your investments couldn't cover it, so you went ${money(deflate(-after, m0 + 1))} into debt at ${DEBT * 100}% interest.`;
     return `${s} In retirement: ${effect}.`;
-  }
-
-  function payMonths(t) {
-    const m0 = Math.round((t.age - S.age) * 12);
-    let need = priceOf(t) * inflAt(m0), m = m0;
-    while (m < model.M && need > 0) { need -= S.monthly * Math.pow(1 + S.raise, Math.floor(m / 12)); m++; }
-    return { months: Math.max(1, m - m0), leftover: Math.max(0, need) };
   }
 
   const toastEl = document.getElementById('toast');
@@ -1480,7 +1431,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
     if (it.phase === 'retire') { toast(it.c.icon, `${it.c.name} at ${it.t.age}: ${retireEffect(it)}`); return; }
     const v = it.impact;
     const what = it.c.type === 'pause' ? `${it.c.name}, ${fmtLen(monthsOf(it.t))} without investing`
-      : payingByPause(it.t) ? `${it.c.name} at ${it.t.age}, paid by pausing investing` : `${it.c.name} at ${it.t.age}`;
+      : `${it.c.name} at ${it.t.age}`;
     toast(it.c.icon, `${what}: ${Math.abs(v) < 1 ? 'no change' : money(v, true)} at 65`);
   }
 
@@ -1600,7 +1551,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       app: 'because-life-happens', version: 1, exportedAt: new Date().toISOString(),
       state: {
         age: S.age, monthly: S.monthly, rate: S.rate, raise: S.raise, payout: S.payout, real: S.real,
-        tokens: S.tokens.map(({ id, key, age, months, price, mode }) => ({ id, key, age, months, price, mode })),
+        tokens: S.tokens.map(({ id, key, age, months, price }) => ({ id, key, age, months, price })),
       },
     };
   }
@@ -1742,7 +1693,7 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       const { t, c } = it;
       const what = c.type === 'pause' ? `No investing for ${fmtLen(monthsOf(t))}`
         : c.type === 'monthly' ? `+${money(priceOf(t))} a month`
-        : `${c.deck === 'take' ? '-' : '+'}${money(priceOf(t))} at today's prices${payingByPause(t) ? ', paid by pausing investing' : ''}`;
+        : `${c.deck === 'take' ? '-' : '+'}${money(priceOf(t))} at today's prices`;
       const effect = it.phase === 'save' ? `${money(it.impact, true)} at 65` : retireEffect(it);
       const storyLines = wrap(story(it), 8.5, CW - 22);
       const need = 30 + storyLines.length * 12;
@@ -1813,7 +1764,6 @@ footer p { margin: 0 0 6px; max-width: 100ch; }
       const o = { id: i + 1, key: t.key, age: snapM(num(t.age, 18, END - 1, 40)) };
       if (CARDS[t.key].type === 'pause') o.months = Math.round(num(t.months, 1, 600, CARDS[t.key].months));
       if (t.price !== undefined && t.price !== null) o.price = num(t.price, 0, 5e6, priceOf(o));
-      if (t.mode === 'pause' || t.mode === 'sell') o.mode = t.mode;
       return o;
     });
     S = {

@@ -6,7 +6,7 @@ A simple, game-like playground: pick your age, monthly amount, where you invest 
 
 Live: https://investment-playground-v2.appwrite.network · Full version: [v1](https://github.com/Meldiron/investment-playground-v1)
 
-- **Saving until 65** – drag a card onto the timeline. Drag icons to move them; pull a pause bar's handle to make it longer. Click an icon to change its price, or to pay for a cost by pausing your investing instead of selling.
+- **Saving until 65** – drag a card onto the timeline. Drag icons to move them; pull a pause bar's handle to make it longer. Click an icon to change its price or age, or to remove it.
 - **Retirement** – pick how much you take out each month (at today's prices, rising with inflation) and see the age you go broke, compared with the promise. Life events can land here too.
 - Balances can go negative: debt grows at 8% a year.
 - **Export PDF** – a two-page report with your settings, both charts and every life event. The scenario is stored inside the PDF (as a document property and an attached `scenario.json`), so **Import PDF** – or dropping the file on the page – restores it exactly.
