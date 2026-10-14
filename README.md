@@ -1,4 +1,4 @@
-# Because Life Happens v2
+# Because Life Happens
 
 The brochure promises a fortune at 65. Life has other plans.
 
